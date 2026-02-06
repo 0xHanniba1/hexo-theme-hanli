@@ -4,7 +4,7 @@
 
 一款简洁优雅的 Hexo 主题，支持深色模式、全文搜索和响应式导航。基于 [Typography](https://github.com/SumiMakito/hexo-theme-typography) 主题开发。
 
-> **Hanli**（韩吏）—— 崇尚简洁与可读性的博客主题。
+> **Hanli** —— 崇尚简洁与可读性的博客主题。
 
 ## 功能特性
 
