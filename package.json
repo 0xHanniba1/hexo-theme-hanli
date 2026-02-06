@@ -1,0 +1,38 @@
+{
+  "name": "hexo-theme-hanli",
+  "version": "1.0.0",
+  "description": "A clean, elegant Hexo theme with dark mode, full-text search, and responsive topbar. Based on Typography.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo 'No tests' && exit",
+    "build": "node-sass raw/scss -o source/css --output-style compressed && postcss source/css -u autoprefixer -r",
+    "scss-compile": "npm run build",
+    "watch": "node-sass -w raw/scss -o source/css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xHanniba1/hexo-theme-hanli"
+  },
+  "keywords": [
+    "hexo",
+    "theme",
+    "typography",
+    "dark-mode",
+    "search",
+    "responsive",
+    "hanli"
+  ],
+  "author": "0xHanniba1",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/0xHanniba1/hexo-theme-hanli/issues"
+  },
+  "homepage": "https://github.com/0xHanniba1/hexo-theme-hanli#readme",
+  "dependencies": {
+    "autoprefixer": "^10.4.13",
+    "node-sass": "^8.0.0",
+    "postcss": "^8.4.19",
+    "postcss-cli": "^10.0.0",
+    "yamljs": "^0.3.0"
+  }
+}

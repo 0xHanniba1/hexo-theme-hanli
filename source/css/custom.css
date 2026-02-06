@@ -1,0 +1,18 @@
+/* 隐藏代码块滚动条但保留滑动功能 */
+figure {
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+figure::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
+/* 可选：如果想要代码自动换行，取消下面注释 */
+/*
+figure .code pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+*/

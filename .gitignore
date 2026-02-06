@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+tmp/
+*.log
+
+# Example project build output
+_example/public/
+_example/db.json
+_example/node_modules/
+_example/.deploy*/

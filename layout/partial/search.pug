@@ -1,0 +1,19 @@
+//- Search modal component
+if theme.search && theme.search.enable
+  #search-modal.search-modal
+    .search-modal-overlay
+    .search-modal-content
+      .search-header
+        .search-input-wrapper
+          i.fa.fa-search.search-icon
+          input#search-input.search-input(
+            type="text"
+            placeholder=theme.search.placeholder || "搜索文章..."
+            autocomplete="off"
+          )
+        button.search-close(type="button" aria-label="关闭搜索")
+          i.fa.fa-times
+      #search-results.search-results
+        .search-empty 输入关键词开始搜索
+      .search-footer
+        span.search-tip 按 Enter 选择 · ↑↓ 导航 · Esc 关闭

@@ -1,0 +1,33 @@
+doctype
+html(lang="zh-CN")
+    head
+        include head
+
+    body
+        include topbar
+        div#stage.container
+            div.row
+                include sidebar
+                div#main-container.col-sm-9.col-xs-12.main-container.invisible
+
+                    block content
+                    div.visible-xs.site-bottom-footer
+                        include footer
+
+
+        //- Search modal
+        if theme.search && theme.search.enable
+            include search
+            script.
+                window.searchPath = '#{url_for("/search.json")}';
+
+        script(src= url_for('js/jquery-3.1.0.min.js'))
+        script(src= url_for('js/bootstrap.min.js'))
+        script(src= url_for('js/jquery-migrate-1.2.1.min.js'))
+        script(src= url_for('js/jquery.appear.js'))
+        script(src= url_for('js/google-analytics.js'))
+        script(src= url_for('js/typography.js'))
+        script(src= url_for('js/theme-toggle.js') + '?v=20260131')
+        if theme.search && theme.search.enable
+            script(src= url_for('js/search.js'))
+

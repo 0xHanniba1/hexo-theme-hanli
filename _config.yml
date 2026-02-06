@@ -1,0 +1,36 @@
+# hexo-theme-hanli Configuration
+# Documentation: https://github.com/0xHanniba1/hexo-theme-hanli
+
+# Site Title (displayed in sidebar)
+title_primary: "Your Blog Title"       # the bigger text
+title_secondary: "Your Blog Subtitle"  # the smaller text
+keywords:
+
+# Social Links (leave blank or comment out to hide)
+twitter: #yourusername
+rss: atom.xml
+weibo: #username/id
+instagram: #yourusername
+github: yourusername
+
+# Comments
+# Choose the comment service according to your need.
+# Please do not use the two services at the same time.
+livere: # [data-uid] on livere.com
+disqus: # [short_name] on disqus.com
+dove: # For fun ONLY. Set to true to 'disable' comments on your site.
+
+# Set true to show the page indicator.
+showPageCount: true
+
+# Set true to show category or tags behind post titles
+showCategories: true
+showTags: true
+
+# Search (requires hexo-generator-searchdb plugin)
+search:
+  enable: true
+  placeholder: "Search posts..."
+
+# Color scheme: light / dark
+themeStyle: light
