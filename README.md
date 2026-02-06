@@ -1,5 +1,7 @@
 # hexo-theme-hanli
 
+[中文文档](README_zh.md)
+
 A clean, elegant Hexo theme with dark mode, full-text search, and responsive navigation. Based on [Typography](https://github.com/SumiMakito/hexo-theme-typography) by Makito.
 
 > **Hanli** (韩吏) — a theme that values simplicity and readability.
