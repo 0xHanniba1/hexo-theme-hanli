@@ -2,73 +2,35 @@
 
 [中文文档](README_zh.md)
 
-A clean, elegant Hexo theme with dark mode, full-text search, and responsive navigation. Based on [Typography](https://github.com/SumiMakito/hexo-theme-typography) by Makito.
+A minimalist Hexo theme with an **ink / paper** palette, command-palette search, and a three-column reading layout. Built for bloggers who value typography and calm.
 
-> **Hanli** — a theme that values simplicity and readability.
+> **Hanli** · 韩立 — a theme that values simplicity, rhythm, and readability.
 
 ## Features
 
-- **Dark / Light Mode** — Toggle between themes with one click; preference is saved in localStorage
-- **Full-text Search** — Built-in search modal with keyboard shortcuts (`Ctrl+K`) powered by `hexo-generator-searchdb`
-- **Responsive Top Bar** — Fixed navigation bar with favicon, search trigger, and theme toggle
-- **Sidebar Navigation** — Vertical site title with navigation links and social icons
-- **Categories & Tags** — Dedicated index pages for categories and tags
-- **Social Links** — GitHub, Twitter, Instagram, Weibo, RSS
-- **Comment System** — LiveRe / Disqus support
-- **Multi-language** — English, Simplified Chinese, Traditional Chinese, Korean
-- **SCSS Source** — Easily customizable with SCSS source files included
+- **Ink / Paper themes** — Deep-ink navy (`ink`) and warm paper (`paper`) palettes, toggled from the topbar. Preference persists in `localStorage` and applies **before first paint** to avoid FOUC.
+- **Command-palette search** — `⌘K` / `Ctrl+K` / `/` opens a full-screen modal with scope tabs (文章 / 标签 / 页面), live-highlighted results, per-row preview rail, and `↑↓⏎` keyboard navigation. Recent queries are remembered.
+- **Three-column layout** — 232 px left rail (nav + tag cloud + year heatmap) · fluid reading stream · 200 px right aside (vertical slogan + now-playing widget + stats + links). Collapses gracefully on tablet / mobile.
+- **Tweaks panel** — Floating gear in the corner lets readers switch the accent color (`暖金 / 青瓷 / 朱砂`) and page texture (`点阵 / 格纹 / 无`). Settings persist per visitor.
+- **Custom about page** — Hero-card layout with seal, handle, tagline, and contact chips. Zero boilerplate.
+- **Weekly / archive aware** — Dedicated `archive`, `tag-index`, `category-index` layouts. The "周志" (weekly) nav entry auto-derives its `W##` badge from the latest post in a configured tag.
+- **Typography-first** — Noto Serif SC + Inter + JetBrains Mono from Google Fonts. Backtick-style inline code highlighting in titles (e.g. `` `CLI` ``) and `YYYY-Wnn` auto-formatting.
+- **Built on Hexo primitives** — No runtime framework. Pug templates, CSS variables, a tiny bit of vanilla JS.
 
-## Preview
-
-<!-- Add your screenshots here -->
-<!-- ![Light Mode](screenshots/light.png) -->
-<!-- ![Dark Mode](screenshots/dark.png) -->
-
-## Installation
-
-### Method 1: Git Clone
-
-```bash
-cd your-hexo-site
-git clone https://github.com/0xHanniba1/hexo-theme-hanli.git themes/hanli
-```
-
-### Method 2: Git Submodule
-
-```bash
-cd your-hexo-site
-git submodule add https://github.com/0xHanniba1/hexo-theme-hanli.git themes/hanli
-```
-
-Then set the theme in your site `_config.yml`:
-
-```yaml
-theme: hanli
-```
-
-## Required Plugins
-
-Install the following Hexo plugins in your site root:
+## Requirements
 
 ```bash
 npm install hexo-renderer-pug hexo-renderer-marked hexo-generator-searchdb --save
 ```
 
-Full list of recommended plugins:
-
 | Plugin | Purpose |
-|--------|---------|
-| `hexo-renderer-pug` | **Required** — Pug template rendering |
-| `hexo-renderer-marked` | **Required** — Markdown rendering |
-| `hexo-generator-searchdb` | **Required** — Full-text search data generation |
-| `hexo-generator-archive` | Archive page generation |
-| `hexo-generator-category` | Category page generation |
-| `hexo-generator-tag` | Tag page generation |
-| `hexo-generator-feed` | RSS/Atom feed generation |
+|---|---|
+| `hexo-renderer-pug` | **Required** — Pug template renderer |
+| `hexo-renderer-marked` | **Required** — Markdown renderer |
+| `hexo-generator-searchdb` | **Required** — Generates `search.json` for the command palette |
+| `hexo-generator-archive` / `-category` / `-tag` / `-feed` / `-index` | Recommended — standard Hexo generators |
 
-### Search Configuration
-
-Add to your site `_config.yml`:
+In your site `_config.yml`:
 
 ```yaml
 search:
@@ -77,47 +39,62 @@ search:
   content: true
 ```
 
+## Installation
+
+```bash
+cd your-hexo-site
+git clone https://github.com/0xHanniba1/hexo-theme-hanli.git themes/hanli
+```
+
+Then in your site `_config.yml`:
+
+```yaml
+theme: hanli
+```
+
 ## Theme Configuration
 
 Edit `themes/hanli/_config.yml`:
 
 ```yaml
-# Site Title (displayed in sidebar)
-title_primary: "Your Blog Title"       # the bigger text
-title_secondary: "Your Blog Subtitle"  # the smaller text
+# Site title (sidebar + vertical slogan)
+title_primary: "Your Blog Title"
+title_secondary: "Your Blog Subtitle"
 
-# Social Links
+# Social links (leave blank to hide)
 github: yourusername
 twitter: yourusername
-instagram: yourusername
 rss: atom.xml
 
-# Search
+# Command-palette search (⌘K / Ctrl+K / /)
 search:
   enable: true
-  placeholder: "Search posts..."
+  placeholder: "搜索文章、标签、页面 · Search everything…"
 
-# Color scheme: light / dark
+# Default theme on first visit: light (paper) / dark (ink)
 themeStyle: light
 
-# Show category/tags on post list
-showCategories: true
-showTags: true
+# Left-rail nav — optional entries
+nav:
+  weekly_url: /tags/2026zk/     # /tags/<weekly-tag>/ → "周志" entry
+  weekly_tag: 2026zk            # used to compute the W## badge
+  about_url: /about/
 
-# Comments (choose one)
-disqus: your-shortname
-# livere: your-data-uid
+# Right-aside now-playing widget (leave blank to hide)
+now_playing:
+  title: 渔舟唱晚
+  artist: 古琴 · 李祥霆
+  cover: /images/np.jpg
 ```
 
-## Tags & Categories Pages
+## Index pages
 
-Create a tags index page:
+Hanli expects `tags` and `categories` index pages. Create them once:
 
 ```bash
 hexo new page tags
+hexo new page categories
 ```
-
-Edit `source/tags/index.md`:
 
 ```markdown
 ---
@@ -126,14 +103,6 @@ layout: tag-index
 ---
 ```
 
-Create a categories index page:
-
-```bash
-hexo new page categories
-```
-
-Edit `source/categories/index.md`:
-
 ```markdown
 ---
 title: Categories
@@ -141,31 +110,52 @@ layout: category-index
 ---
 ```
 
-## Customization
+## About page
 
-### SCSS
+Create `source/about/index.md`:
 
-SCSS source files are in `raw/scss/`. After modifying, build CSS:
-
-```bash
-cd themes/hanli
-npm install
-npm run build
+```markdown
+---
+title: 关于
+layout: about
+handle: '@yourhandle'
+tagline: 慢就是快 · 自律 · 坚持
+contact:
+  - { icon: github,  label: yourhandle, url: 'https://github.com/yourhandle' }
+  - { icon: twitter, label: '@yourhandle', url: 'https://twitter.com/yourhandle' }
+  - { icon: rss,     label: RSS, url: /atom.xml }
+---
 ```
 
-### Custom CSS
+Icons use Font Awesome 4 (bundled with the theme) — `github / twitter / rss / envelope / link` etc.
 
-Add your custom styles to `source/css/custom.css` — this file is loaded after all other styles.
+## Post-title niceties
 
-## Example Project
+- Wrap inline code with backticks: `` 每日记录 `2026-W10` `` renders the backtick portion as monospace.
+- `YYYY-Wnn` segments (e.g. `2026-W10`) automatically render in the mono family.
 
-A complete example blog is provided in the `_example/` directory. To try it:
+## Custom CSS
+
+Drop your overrides in `source/css/custom.css`. It's loaded after `typo.css`, so your selectors win without `!important`.
+
+## Keyboard shortcuts
+
+| Key | Action |
+|---|---|
+| `⌘K` / `Ctrl+K` / `/` | Open search |
+| `↑ / ↓` | Navigate results |
+| `Tab` | Cycle scope tabs |
+| `⏎` | Open selected row |
+| `Esc` | Close modal |
+
+## Example project
+
+`_example/` contains a runnable demo. Link it in and start:
 
 ```bash
 cd _example
 npm install
 
-# Link theme subdirectories (avoids circular symlink)
 mkdir -p themes/hanli
 ln -sfn ../../layout themes/hanli/layout
 ln -sfn ../../source themes/hanli/source
@@ -173,12 +163,13 @@ ln -sfn ../../languages themes/hanli/languages
 ln -sfn ../../_config.yml themes/hanli/_config.yml
 ln -sfn ../../package.json themes/hanli/package.json
 
-hexo server
+npx hexo server
 ```
 
 ## Credits
 
-- Based on [Typography](https://github.com/SumiMakito/hexo-theme-typography) by [Makito](https://www.keep.moe)
+- Originally forked from [Typography](https://github.com/SumiMakito/hexo-theme-typography) by [Makito](https://www.keep.moe)
+- Rebuilt from the ground up for the **ink / paper** design
 - Powered by [Hexo](https://hexo.io)
 
 ## License
