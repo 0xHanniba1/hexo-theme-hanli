@@ -17,6 +17,48 @@
 - **排版优先** — Noto Serif SC + Inter + JetBrains Mono（Google Fonts 加载）。标题里 `` ` ` `` 包裹的行内代码会自动使用等宽字体，`YYYY-Wnn` 格式同理。
 - **基于 Hexo 原语** — 不引入运行时框架。Pug 模板 + CSS 变量 + 少量原生 JS。
 
+## Quickstart · 5 分钟从零跑起来
+
+复制即用，记得把 `<你的名字>` / `<你的标题>` 换掉：
+
+```bash
+# 1. 新建 Hexo 站点
+npx hexo init my-blog && cd my-blog
+npm install
+
+# 2. 安装必需插件
+npm i hexo-renderer-pug hexo-renderer-marked hexo-generator-searchdb
+
+# 3. 克隆主题
+git clone https://github.com/0xHanniba1/hexo-theme-hanli.git themes/hanli
+
+# 4. 站点 _config.yml 挂上主题 + 打开搜索
+cat >> _config.yml <<'YAML'
+
+theme: hanli
+search:
+  path: search.json
+  field: post
+  content: true
+YAML
+
+# 5. 填主题 _config.yml —— 打开 themes/hanli/_config.yml，至少改
+#    title_primary / title_secondary / github。
+
+# 6. 建标签 + 分类索引页
+hexo new page tags
+hexo new page categories
+# 然后把两个 md 文件 frontmatter 里分别加 layout: tag-index / layout: category-index
+
+# 7. （可选）关于页 —— 新建 source/about/index.md，frontmatter 参考下方
+#    "关于页"章节。
+
+# 8. 起飞
+npx hexo server
+```
+
+> **让 AI 帮你跑？** 仓库里有一份给 AI 助手（Claude Code / Cursor 等）的工作手册 [`CLAUDE.md`](CLAUDE.md)。把主题目录指给 AI，它就能自己读懂文件结构、配置项、常见任务，不用你每次重新解释。
+
 ## 依赖
 
 ```bash

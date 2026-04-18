@@ -17,6 +17,48 @@ A minimalist Hexo theme with an **ink / paper** palette, command-palette search,
 - **Typography-first** — Noto Serif SC + Inter + JetBrains Mono from Google Fonts. Backtick-style inline code highlighting in titles (e.g. `` `CLI` ``) and `YYYY-Wnn` auto-formatting.
 - **Built on Hexo primitives** — No runtime framework. Pug templates, CSS variables, a tiny bit of vanilla JS.
 
+## Quickstart — 5 minutes to a running blog
+
+Copy-paste friendly. Replace `<yourname>` / `<your-title>` as you go.
+
+```bash
+# 1. Scaffold a new Hexo site
+npx hexo init my-blog && cd my-blog
+npm install
+
+# 2. Install required plugins
+npm i hexo-renderer-pug hexo-renderer-marked hexo-generator-searchdb
+
+# 3. Clone the theme
+git clone https://github.com/0xHanniba1/hexo-theme-hanli.git themes/hanli
+
+# 4. Point the site at the theme + enable search (site _config.yml)
+cat >> _config.yml <<'YAML'
+
+theme: hanli
+search:
+  path: search.json
+  field: post
+  content: true
+YAML
+
+# 5. Fill in the theme config — open themes/hanli/_config.yml and set
+#    title_primary / title_secondary / github at minimum.
+
+# 6. Create tag + category index pages
+hexo new page tags
+hexo new page categories
+# Then set `layout: tag-index` / `layout: category-index` in each frontmatter.
+
+# 7. (Optional) About page — create source/about/index.md, copy the
+#    frontmatter from the "About page" section below.
+
+# 8. Go
+npx hexo server
+```
+
+> **Working with an AI assistant?** This repo ships a [`CLAUDE.md`](CLAUDE.md) agent guide. Point Claude Code / Cursor / any agent-friendly IDE at the theme directory and it will know the file layout, configuration surface, and common tasks without you re-explaining.
+
 ## Requirements
 
 ```bash
