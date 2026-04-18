@@ -25,5 +25,7 @@ html(lang="zh-CN")
 
         script(src= url_for('js/theme-toggle.js') + '?v=20260418')
         script(src= url_for('js/tweaks.js') + '?v=20260418')
+        if theme.now_playing && theme.now_playing.title && theme.now_playing.audio_url
+            script(src= url_for('js/now-playing.js') + '?v=20260418-12')
         if theme.search && theme.search.enable
             script(src= url_for('js/search.js') + '?v=20260418-12')

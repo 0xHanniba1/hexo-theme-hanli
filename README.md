@@ -12,6 +12,7 @@ A minimalist Hexo theme with an **ink / paper** palette, command-palette search,
 - **Command-palette search** — `⌘K` / `Ctrl+K` / `/` opens a full-screen modal with scope tabs (文章 / 标签 / 页面), live-highlighted results, per-row preview rail, and `↑↓⏎` keyboard navigation. Recent queries are remembered.
 - **Three-column layout** — 232 px left rail (nav + tag cloud + year heatmap) · fluid reading stream · 200 px right aside (vertical slogan + now-playing widget + stats + links). Collapses gracefully on tablet / mobile.
 - **Tweaks panel** — Floating gear in the corner lets readers switch the accent color (`暖金 / 青瓷 / 朱砂`) and page texture (`点阵 / 格纹 / 无`). Settings persist per visitor.
+- **Now-playing widget** — Right-aside card shows a track title + artist + an eq animation. Drop in a local audio file and it becomes click-to-play; bars animate only while actually playing.
 - **Custom about page** — Hero-card layout with seal, handle, tagline, and contact chips. Zero boilerplate.
 - **Weekly / archive aware** — Dedicated `archive`, `tag-index`, `category-index` layouts. The "周志" (weekly) nav entry auto-derives its `W##` badge from the latest post in a configured tag.
 - **Typography-first** — Noto Serif SC + Inter + JetBrains Mono from Google Fonts. Backtick-style inline code highlighting in titles (e.g. `` `CLI` ``) and `YYYY-Wnn` auto-formatting.
@@ -127,7 +128,10 @@ now_playing:
   title: 渔舟唱晚
   artist: 古琴 · 李祥霆
   cover: /images/np.jpg
+  audio_url: /audio/yuzhouchangwan.mp3    # optional — click card to play/pause
 ```
+
+> Drop the MP3 under `source/audio/` in your Hexo site. Hexo copies it to `public/` on build. Browsers block autoplay, so the widget always starts paused — the listener clicks the cover to play.
 
 ## Index pages
 

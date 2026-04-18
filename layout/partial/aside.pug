@@ -16,13 +16,18 @@ aside.aside
 
     .aside-info
         if theme.now_playing && theme.now_playing.title
+            - var npAudio = theme.now_playing.audio_url
             .label 此刻 · Now Playing
-            .now-playing
+            .now-playing(class=npAudio ? 'playable' : '', role=npAudio ? 'button' : null, tabindex=npAudio ? '0' : null, aria-label=npAudio ? '播放 / 暂停' : null)
                 if theme.now_playing.cover
                     .np-cover
                         img(src=theme.now_playing.cover, alt=theme.now_playing.title, loading="lazy")
+                        if npAudio
+                            span.np-play-icon
                 else
                     .np-cover
+                        if npAudio
+                            span.np-play-icon
                 .np-text
                     .t= theme.now_playing.title
                     if theme.now_playing.artist
@@ -32,6 +37,8 @@ aside.aside
                     i
                     i
                     i
+                if npAudio
+                    audio.np-audio(src=url_for(npAudio), preload="none", loop)
             .divider
         .label 数据 · Stats
         .stat-grid

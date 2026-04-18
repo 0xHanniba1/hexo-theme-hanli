@@ -72,6 +72,7 @@ Everything user-facing lives in **theme `_config.yml`**. Do not hardcode values 
 | `nav.about_url` | "关于" entry hidden | path like `/about/` |
 | `now_playing.title` + `artist` | Now-playing card hidden | strings |
 | `now_playing.cover` | Cover art swatch uses placeholder color | image path |
+| `now_playing.audio_url` | Card is decorative (static bars, not clickable) | audio path, e.g. `/audio/track.mp3` — enables click-to-play, bars animate on play |
 
 Site-level `_config.yml` must also have:
 
@@ -118,6 +119,23 @@ The three accents (`gold / jade / seal`) are hardcoded in **two** places — kee
 - `layout/partial/tweaks.pug` → buttons inside `.tw-opts[data-key="accent"]`
 
 To add a new accent: add an entry to `ACCENTS`, add a button with `data-v="<name>"`, done. No CSS change needed (vars are set inline).
+
+### "Make the now-playing widget actually play music"
+
+The card supports click-to-play when `now_playing.audio_url` is set:
+
+1. Drop an audio file under `source/audio/` (e.g. `source/audio/track.mp3`). Hexo copies files from `source/` verbatim into `public/`.
+2. In theme `_config.yml`:
+   ```yaml
+   now_playing:
+     title: Track Title
+     artist: Artist Name
+     audio_url: /audio/track.mp3
+   ```
+3. `source/js/now-playing.js` binds click + Enter/Space on `.now-playing.playable` to toggle `<audio>` play/pause. `audio` is `loop` + `preload="none"`, so nothing downloads until the user clicks.
+4. The `.np-bars` eq animation is paused by default; adding `.playing` to the card (via the `audio` `play`/`pause` events) starts it. No CSS change needed when adding a new song — just update config.
+
+Note: browsers block autoplay without a user gesture. The widget always starts paused. That's intentional.
 
 ### "Change the default theme (ink vs paper)"
 

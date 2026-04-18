@@ -48,3 +48,4 @@ now_playing:
   title:                      # e.g. 渔舟唱晚
   artist:                     # e.g. 古琴 · 李祥霆
   cover:                      # optional image path, e.g. /images/np.jpg
+  audio_url:                  # optional audio path, e.g. /audio/track.mp3 — click card to play/pause
