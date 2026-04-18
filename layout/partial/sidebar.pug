@@ -1,9 +1,36 @@
-div#side-bar.col-sm-3.col-xs-12.side-container.invisible
-    div.vertical-text.site-title
-        h3.site-title-small(tabindex="-1")
-            a.a-title(href=config.root)= theme.title_secondary
-        h1.site-title-large(tabindex="-1")
-            a.a-title(href=config.root)= theme.title_primary
-        //h6(onclick="triggerSiteNav()") Trigger
-    br.visible-lg.visible-md.visible-sm
+aside.rail
     include nav
+
+    if site.tags.length > 0
+        - var railTags = site.tags.sort('length', -1).slice(0, 10)
+        .rail-card
+            .rail-head 高频标签 · Tags
+            .tags-cloud
+                - railTags.each(function(t, i) {
+                a.tag-chip(href=url_for(t.path), title=t.name, data-size=(i < 2 ? 'lg' : null))
+                    span.dot
+                    = t.name
+                - });
+
+    //- Year heatmap: last 104 weeks aggregated into 26×4 grid
+    - var bucketMs = 1000 * 60 * 60 * 24 * 7
+    - var now = Date.now()
+    - var buckets = []
+    - for (var i = 0; i < 104; i++) buckets.push(0);
+    - site.posts.each(function(p) {
+    -     var diff = Math.floor((now - new Date(p.date).getTime()) / bucketMs)
+    -     if (diff >= 0 && diff < 104) buckets[103 - diff] += 1
+    - });
+    - var maxC = 1
+    - for (var i = 0; i < buckets.length; i++) if (buckets[i] > maxC) maxC = buckets[i];
+    .rail-card
+        .rail-head 年度 · #{new Date().getFullYear()}
+        .heatmap
+            - buckets.forEach(function(c) {
+            -   var l = 0
+            -   if (c > 0) {
+            -     var r = c / maxC
+            -     l = r > 0.75 ? 4 : r > 0.5 ? 3 : r > 0.25 ? 2 : 1
+            -   }
+            i(data-l=l)
+            - });

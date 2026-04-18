@@ -1,130 +1,139 @@
-mixin make_post(item, is_detail)
-    div.post-container
-        p.post-title
-            if is_detail
-                a= item.title
-            else
-                a(href= url_for(item.path))= item.title
-        p.post-meta
-            span.date.meta-item!=__("posted_at")+"&nbsp;" + date(item.date, 'YYYY-MM-DD')
-            if theme.duoshuo || theme.disqus
-                span.meta-item
-                    i.fa.fa-comment-o
-                    span &nbsp;
-                    a(href= url_for(item.path + "#comments"))= __('Comments')
-            if theme.showCategories
-                if item.categories
-                    if item.categories.length > 0
-                        span.meta-item
-                            i.fa.fa-folder
-                            span &nbsp;
-                            - item.categories.sort('posts').each(function(item) {
-                            a.a-tag(href=config.root + item.path, title= item.name)= item.name
-                            span &nbsp;
-                            - });
-            if theme.showTags
-                if item.tags
-                    if item.tags.length > 0
-                        span.meta-item
-                            i.fa.fa-tag
-                            span &nbsp;
-                            - item.tags.sort('posts').each(function(item) {
-                            a.a-tag(href=config.root + item.path, title= item.name)= item.name
-                            span &nbsp;
-                            - });
-        if is_detail
-            //- Use a block container so headings/tables are valid HTML.
-            .post-abstract!= item.content
-        else
-            p.post-abstract!= truncate(strip_html(item.content.replace(/<pre(?: |>)[^]*?<\/pre>/gm, ' ')), {length: 160})
+//- Beautify a title string — shared helper.
+mixin beautifyTitle(raw)
+    - var esc = function(s){ return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    - var s = esc(raw || '')
+    - s = s.replace(/`([^`]+)`/g, '<code>$1</code>')
+    - s = s.replace(/(\d{4}-W\d{1,2})/gi, '<span class="en">$1</span>')
+    != s
 
+
+//- ========================================================
+//- make_post — single card on index/list pages
+//- ========================================================
+mixin make_post(item)
+    - var postDate = new Date(item.date)
+    - var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    - var words = strip_html(item.content || '').replace(/\s+/g, '').length
+    - var readTime = Math.max(1, Math.round(words / 400))
+    - var firstCat = (item.categories && item.categories.length) ? item.categories.data[0] : null
+    - var raw = (item.excerpt || item.content || '').replace(/<pre(?: |>)[^]*?<\/pre>/gm, ' ').replace(/<figure class="highlight[^"]*">[^]*?<\/figure>/gm, ' ')
+    - var excerpt = truncate(strip_html(raw).trim(), {length: 160, omission: '…'})
+
+    article.post
+        .post-date
+            span.day= ('0' + postDate.getDate()).slice(-2)
+            span.month= monthNames[postDate.getMonth()]
+            span.year= postDate.getFullYear()
+        .post-body
+            .post-kicker
+                if firstCat && theme.showCategories
+                    a.cat(href=url_for(firstCat.path))= firstCat.name
+                span.read-time= readTime + ' min read'
+            a.title-link(href=url_for(item.path))
+                h2.post-title
+                    +beautifyTitle(item.title)
+            if excerpt
+                p.post-excerpt!= excerpt
+            .post-foot
+                if theme.showTags && item.tags && item.tags.length > 0
+                    .tags
+                        - item.tags.each(function(t) {
+                        a.tag(href=url_for(t.path))= t.name
+                        - });
+
+
+//- ========================================================
+//- make_page_links — kept for backwards compat
+//- ========================================================
 mixin make_page_links()
     if site.pages
         - var excludeDirs = [config.tag_dir, config.category_dir, config.archive_dir];
-        - site.pages.each(function (page) {
-        -     if (excludeDirs.some(function(d) { return page.path.indexOf(d) === 0; })) return;
+        - site.pages.each(function (p) {
+        -     if (excludeDirs.some(function(d) { return p.path.indexOf(d) === 0; })) return;
             li
-                    if is_current(page.path)
-                        a.current(href=config.root+page.path)= page.title
+                    if is_current(p.path)
+                        a.current(href=config.root+p.path)= p.title
                     else
-                        a(href=config.root+page.path)= page.title
+                        a(href=config.root+p.path)= p.title
         - });
 
 
+//- ========================================================
+//- make_pager — uses Hexo built-in paginator for numbered links.
+//- escape:false lets us pass inline-SVG chevrons as prev/next text.
+//- Left label is hardcoded CN ("共 N 篇 · 第 X / Y 页") to match design.
+//- ========================================================
 mixin make_pager()
-    - var prev = page.prev_link
-    - var next = page.next_link
-    .pagination.no-margin-bottom
-        p.clearfix
-            if theme.showPageCount
-                p
-                    != ' ' + __('PageNumber', page.current) + ' / ' + __('PageCount', page.total) + ' '
-                    | &nbsp;
-            p
-                if page.prev
-                span.pre.pagbuttons
-                    i.fa.fa-angle-double-left
-                    | &nbsp;
-                    a(role="navigation",href=url_for(prev),aria-label= __('prev'))= __('prev')
+    if page.total && page.total > 1
+        - var chevLeft  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>'
+        - var chevRight = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>'
+        - var totalItems = null
+        - if (page.tag) { var t = site.tags.findOne({ name: page.tag }); if (t) totalItems = t.length; }
+        - else if (page.category) { var c = site.categories.findOne({ name: page.category }); if (c) totalItems = c.length; }
+        - else { totalItems = site.posts.length; }
+        - var pagerLabel = (totalItems != null ? ('共 ' + totalItems + ' 篇 · ') : '') + '第 ' + page.current + ' / ' + page.total + ' 页'
+        .pagination
+            span.page-more= pagerLabel
+            .page-nav!= paginator({ prev_text: chevLeft, next_text: chevRight, mid_size: 2, end_size: 1, escape: false })
 
-                if page.next
-                span &nbsp;
-                span.next.pagbuttons
-                    a(role="navigation",href=url_for(next),aria-label=__('next'))= __('next')
-                    | &nbsp;
-                    i.fa.fa-angle-double-right
 
+//- ========================================================
+//- postList — archive / tag / category listing, grouped by year
+//- ========================================================
 mixin postList()
-    - var year = 0;
-    - var change = false;
-    - var firstYear = true;
-    - var fixupRequired = page.posts.length > 0;
-    - page.posts.each(function (item) {
-    - var itemYear = date(item.date, 'YYYY') - 0;
-    - change = year !== itemYear;
-    - year = change ? itemYear : year;
-    if change
-        if firstYear
-            | <li class="listing-title">
-            h4.ar-year!= year
-            | <ul class="listing">
-            - firstYear = false;
-        else
-            | </ul></li><li class="listing-title">
-            h4.ar-year!= year
-            | <ul class="listing">
+    - var years = {}
+    - var yearOrder = []
+    - page.posts.each(function(item) {
+    -     var y = date(item.date, 'YYYY')
+    -     if (!years[y]) { years[y] = []; yearOrder.push(y); }
+    -     years[y].push(item)
+    - });
+    each y in yearOrder
+        section.year-block
+            .year-marker
+                span.yr= y
+                span.count-pill= years[y].length + ' posts'
+            .ar-list
+                each item in years[y]
+                    - var itemCat = (item.categories && item.categories.length) ? item.categories.data[0] : null
+                    a.ar-item(href= url_for(item.path), title= item.title)
+                        span.ar-date= date(item.date, 'MM-DD')
+                        span.ar-title= item.title
+                        if itemCat
+                            span.ar-cat= itemCat.name
+                        else
+                            span.ar-cat
 
-    | <li class="listing-item">
-    .listing-post
-        p.post-title
-            a(href= url_for(item.path), title= item.title)= item.title
-        div.post-time
-            span.ar-date= date(item.date, 'MM-DD')
-    | </li>
-    - })
-    if fixupRequired
-        | </ul></li>
 
+//- ========================================================
+//- tagList — /tags page, big cloud weighted by post count
+//- ========================================================
 mixin tagList()
-    ul.listing
-        - site.tags.each(function (item) {    
-        | <li class="listing-item">
-        .listing-post
-            p.post-title
-                a(href= url_for(item.path), title= item.name)= item.name
-            span.date.meta-item
-                != __('TagCount', item.posts.length)
-        | </li>
-        - })
+    - var sorted = site.tags.sort('length', -1)
+    - var maxLen = 1
+    - sorted.each(function(t) { if (t.length > maxLen) maxLen = t.length; })
+    .big-cloud
+        each t in sorted.toArray()
+            - var ratio = t.length / maxLen
+            - var size = ratio > 0.7 ? 'xl' : ratio > 0.45 ? 'lg' : ratio > 0.25 ? 'md' : ratio > 0.1 ? 'sm' : 'xs'
+            a(href= url_for(t.path), title=t.name, class='cloud-tag ' + size)
+                span.ct-dot
+                = t.name
+                span.ct-count= t.length
 
+
+//- ========================================================
+//- categoryList — /categories page
+//- ========================================================
 mixin categoryList()
-    ul.listing
-        - site.categories.each(function (item) {    
-        | <li class="listing-item">
-        .listing-post
-            p.post-title
-                a(href= url_for(item.path), title= item.name)= item.name
-            span.date.meta-item
-                != __('CategoriesCount', item.posts.length)
-        | </li>
-        - })
+    - var sorted = site.categories.sort('length', -1)
+    - var maxLen = 1
+    - sorted.each(function(c) { if (c.length > maxLen) maxLen = c.length; })
+    .big-cloud
+        each c in sorted.toArray()
+            - var ratio = c.length / maxLen
+            - var size = ratio > 0.7 ? 'xl' : ratio > 0.45 ? 'lg' : ratio > 0.25 ? 'md' : ratio > 0.1 ? 'sm' : 'xs'
+            a(href= url_for(c.path), title=c.name, class='cloud-tag ' + size)
+                span.ct-dot
+                = c.name
+                span.ct-count= c.length

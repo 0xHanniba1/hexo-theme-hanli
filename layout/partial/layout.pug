@@ -4,16 +4,15 @@ html(lang="zh-CN")
         include head
 
     body
-        include topbar
-        div#stage.container
-            div.row
+        div.page
+            include topbar
+            main.main
                 include sidebar
-                div#main-container.col-sm-9.col-xs-12.main-container.invisible
-
+                section.stream
                     block content
-                    div.visible-xs.site-bottom-footer
-                        include footer
-
+                include aside
+        footer.foot
+            include footer
 
         //- Search modal
         if theme.search && theme.search.enable
@@ -21,13 +20,10 @@ html(lang="zh-CN")
             script.
                 window.searchPath = '#{url_for("/search.json")}';
 
-        script(src= url_for('js/jquery-3.1.0.min.js'))
-        script(src= url_for('js/bootstrap.min.js'))
-        script(src= url_for('js/jquery-migrate-1.2.1.min.js'))
-        script(src= url_for('js/jquery.appear.js'))
-        script(src= url_for('js/google-analytics.js'))
-        script(src= url_for('js/typography.js'))
-        script(src= url_for('js/theme-toggle.js') + '?v=20260131')
-        if theme.search && theme.search.enable
-            script(src= url_for('js/search.js'))
+        //- Tweaks floating panel
+        include tweaks
 
+        script(src= url_for('js/theme-toggle.js') + '?v=20260418')
+        script(src= url_for('js/tweaks.js') + '?v=20260418')
+        if theme.search && theme.search.enable
+            script(src= url_for('js/search.js') + '?v=20260418-12')

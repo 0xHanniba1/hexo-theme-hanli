@@ -1,9 +1,74 @@
 extends partial/layout
+
+include mixins
+
 block content
-	.autopagerize_page_element: .content
-		- page.posts.each(function (item) {
-			include mixins
-			+make_post(item, false)
-		- })
-		include mixins
-		+make_pager(__('prev'), __('next'))
+    - var posts = page.posts.toArray()
+    - var hero = (page.current === 1 && posts.length > 0) ? posts[0] : null
+    - var rest = hero ? posts.slice(1) : posts
+
+    if hero
+        - var heroDate = new Date(hero.date)
+        - var heroYear = heroDate.getFullYear()
+        - var heroWords = strip_html(hero.content || '').replace(/\s+/g, '').length
+        - var heroRead = Math.max(1, Math.round(heroWords / 400))
+        - var heroRaw = (hero.excerpt || hero.content || '').replace(/<pre(?: |>)[^]*?<\/pre>/gm, ' ').replace(/<figure class="highlight[^"]*">[^]*?<\/figure>/gm, ' ')
+        - var heroExcerpt = truncate(strip_html(heroRaw).trim(), {length: 220, omission: '…'})
+        //- Week detection from title (e.g. "2026-W10")
+        - var wm = (hero.title || '').match(/(\d{4})-W(\d{1,2})/i)
+        - var heroWeek = wm ? 'W' + parseInt(wm[2], 10) : null
+        //- Freshness pill
+        - var ageDays = (Date.now() - heroDate.getTime()) / 86400000
+        - var heroPill = ageDays <= 7 ? '本周更新 · LATEST' : '最新 · LATEST'
+        //- Rough solar-term label per month
+        - var terms = ['小寒','立春','惊蛰','清明','立夏','芒种','小暑','立秋','白露','寒露','立冬','大雪']
+        - var heroSeason = terms[heroDate.getMonth()]
+        //- Optional front-matter: subtitle, cover
+        - var heroSubtitle = hero.subtitle || null
+        - var heroCover = hero.cover || null
+
+        article.hero(class=(heroCover ? 'has-cover' : null))
+            if heroCover
+                .hero-cover
+                    img(src=heroCover, alt=hero.title, loading="lazy")
+            .hero-meta
+                span.pill
+                    span.pulse
+                    = heroPill
+                span= heroYear + (heroWeek ? ' · ' + heroWeek : '') + ' · ' + heroSeason
+                span= '约 ' + heroWords.toLocaleString() + ' 字 · ' + heroRead + ' 分钟'
+            a.title-link(href=url_for(hero.path))
+                h1.hero-title
+                    +beautifyTitle(hero.title)
+            if heroSubtitle
+                p.hero-subtitle= heroSubtitle
+            if heroExcerpt
+                p.hero-excerpt!= heroExcerpt
+            .hero-foot
+                if hero.tags && hero.tags.length > 0
+                    .hero-tags
+                        - hero.tags.each(function(t, i) {
+                        a.tag-chip(href=url_for(t.path), data-size=(i === 0 ? 'lg' : null))
+                            span.dot
+                            = t.name
+                        - });
+                a.read-btn(href=url_for(hero.path))
+                    | 展卷阅读
+                    svg(width="14", height="14", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="2")
+                        path(d="M5 12h14M13 6l6 6-6 6")
+
+    if rest.length > 0
+        .sec-head
+            span.num Ⅱ
+            span.zh 近期文章
+            span.en Recent Posts
+            span.rule
+            a.view-all(href=config.root + config.archive_dir)
+                | 全部归档
+                i.fa.fa-angle-right
+
+        .posts
+            each item in rest
+                +make_post(item)
+
+    +make_pager()

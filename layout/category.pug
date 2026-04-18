@@ -1,20 +1,21 @@
 extends partial/layout
 
+include mixins
+
 block site_title
     != page.category + " · " + config.title
 
 block description
-    - var desc = __("Categories")+': ' + page.category + ' - ' + config.title;
+    - var desc = __("Categories") + ': ' + page.category + ' - ' + config.title
     meta(name="description", content=desc)
 
 block content
-    .autopagerize_page_element: .content
-        p.post-title
-            != __("Categories")+' ' + page.category
-        .archive.animated.fadeInDown
-            ul.list-with-title
-                include mixins
-                +postList()
-            .controller
-                include mixins
-                +make_pager(__('prev'), __('next'))
+    section.tags-head
+        .archive-title
+            .eyebrow= __('Categories')
+            h1= page.category
+            p= __('CategoriesCount', page.posts.length)
+
+    +postList()
+
+    +make_pager()

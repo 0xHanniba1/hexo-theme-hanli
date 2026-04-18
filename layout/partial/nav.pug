@@ -1,59 +1,96 @@
-div#site-nav.site-title-links
-    ul
-        li
-            if is_home()
-                a.current(href=config.root)
-                    i.fa.fa-home &nbsp;
-                    = __('Home')
-            else
-                a(href=config.root)
-                    i.fa.fa-home &nbsp;
-                    = __('Home')
-        li
-            if is_archive()
-                a.current(href=config.root + config.archive_dir)
-                    i.fa.fa-archive &nbsp;
-                    = __('Archive')
-            else
-                a(href=config.root + config.archive_dir)
-                    i.fa.fa-archive &nbsp;
-                    = __('Archive')
-        - if (site.categories.length > 0) {
-        li
-            if is_current('categories/')
-                a.current(href=config.root + config.category_dir)= __('Categories')
-            else
-                a(href=config.root + config.category_dir)= __('Categories')
-        - }
-        - if (site.tags.length > 0) {
-        li
-            if is_current('tags/')
-                a.current(href=config.root + config.tag_dir)
-                    i.fa.fa-tags &nbsp;
-                    = __('Tags')
-            else
-                a(href=config.root + config.tag_dir)
-                    i.fa.fa-tags &nbsp;
-                    = __('Tags')
-        - }
+//- Compute "is current page inside the weekly URL?" once, so the 标签 entry
+//- doesn't light up when the visitor is actually inside 周志 (which is also /tags/…).
+- var weeklyStrip = (theme.nav && theme.nav.weekly_url) ? theme.nav.weekly_url.replace(/^\//,'').replace(/\/$/,'') + '/' : null
+- var onWeekly = weeklyStrip ? is_current(weeklyStrip) : false
+- var aboutStrip = (theme.nav && theme.nav.about_url) ? theme.nav.about_url.replace(/^\//,'').replace(/\/$/,'') + '/' : null
+- var onAbout = aboutStrip ? is_current(aboutStrip) : false
+
+.rail-card
+    .rail-head 导航 · Menu
+    nav.rail-nav
+        //- 首页
+        - var homeClass = is_home() ? 'active' : null
+        a(href=config.root, class=homeClass)
+            svg(width="16", height="16", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.6")
+                path(d="M3 11l9-8 9 8")
+                path(d="M5 10v10h14V10")
+            span.label-zh 首页
+            span.count HOME
+
+        //- 归档
+        - var archiveClass = is_archive() ? 'active' : null
+        a(href=config.root + config.archive_dir, class=archiveClass)
+            svg(width="16", height="16", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.6")
+                rect(x="3", y="4", width="18", height="4", rx="1")
+                path(d="M5 8v12h14V8")
+                path(d="M10 12h4")
+            span.label-zh 归档
+            span.count= site.posts.length
+
+        //- 标签
+        if site.tags.length > 0
+            - var tagsClass = (is_current('tags/') && !onWeekly) ? 'active' : null
+            a(href=config.root + config.tag_dir, class=tagsClass)
+                svg(width="16", height="16", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.6")
+                    path(d="M20 12 12 20l-8-8L12 4h8z")
+                    circle(cx="15", cy="9", r="1.5", fill="currentColor")
+                span.label-zh 标签
+                span.count= site.tags.length
+
+        //- 分类 (如有)
+        if site.categories.length > 0
+            - var catsClass = is_current('categories/') ? 'active' : null
+            a(href=config.root + config.category_dir, class=catsClass)
+
+                svg(width="16", height="16", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.6")
+                    path(d="M3 7h6l2 2h10v10H3z")
+                    path(d="M3 7V5h5l2 2")
+                span.label-zh 分类
+                span.count= site.categories.length
+
+        //- 周志 (tag-based weekly journal). Count: latest "YYYY-Wnn" week number.
+        if theme.nav && theme.nav.weekly_url
+            - var weeklyLabel = ''
+            - if (theme.nav.weekly_tag) {
+            -     var wt = site.tags.findOne({ name: theme.nav.weekly_tag })
+            -     if (wt && wt.posts && wt.posts.length > 0) {
+            -         var latest = wt.posts.sort('-date').data[0]
+            -         var m = latest && latest.title ? latest.title.match(/W(\d{1,2})/i) : null
+            -         weeklyLabel = m ? ('W' + parseInt(m[1], 10)) : ('W' + wt.length)
+            -     }
+            - }
+            - if (!weeklyLabel) weeklyLabel = 'W' + Math.ceil(((new Date() - new Date(new Date().getFullYear(), 0, 1)) / 86400000 + 1) / 7)
+            - var weeklyClass = onWeekly ? 'active' : null
+            a(href=theme.nav.weekly_url, class=weeklyClass)
+                svg(width="16", height="16", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.6")
+                    path(d="M4 4h12l4 4v12H4z")
+                    path(d="M8 8h6M8 12h8M8 16h5")
+                span.label-zh 周志
+                span.count= weeklyLabel
+
+        //- 关于
+        if theme.nav && theme.nav.about_url
+            - var aboutClass = onAbout ? 'active' : null
+            a(href=theme.nav.about_url, class=aboutClass)
+                svg(width="16", height="16", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.6")
+                    circle(cx="12", cy="12", r="9")
+                    path(d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18")
+                span.label-zh 关于
+                span.count ABOUT
+
+        //- Extra pages from site.pages (excluding tag/category/archive/about)
         include ../mixins
-        +make_page_links()
-        li.soc
-            if theme.github
-                a(href="https://github.com/" + theme.github, target="_blank", rel="noopener noreferrer", aria-label="Github")
-                    i.fa.fa-github &nbsp;
-            if theme.twitter
-                a(href="https://twitter.com/" + theme.twitter, target="_blank", rel="noopener noreferrer", aria-label="Twitter")
-                    i.fa.fa-twitter &nbsp;
-            if theme.instagram
-                a(href="https://www.instagram.com/" + theme.instagram, target="_blank", rel="noopener noreferrer", aria-label="Instagram")
-                    i.fa.fa-instagram &nbsp;
-            if theme.weibo
-                a(href="http://weibo.com/u/" + theme.weibo, target="_blank", rel="noopener noreferrer", aria-label="Sina Weibo")
-                    i.fa.fa-weibo &nbsp;
-            if theme.rss
-                a(href=config.url + "/" + theme.rss, target="_blank", rel="noopener noreferrer", aria-label="RSS")
-                    i.fa.fa-rss &nbsp;
-    div.visible-lg.visible-md.visible-sm.site-nav-footer
-        br.site-nav-footer-br
-        include footer
+        if site.pages
+            - var aboutPath = theme.nav && theme.nav.about_url ? theme.nav.about_url.replace(/^\//,'') : ''
+            - var excludeDirs = [config.tag_dir, config.category_dir, config.archive_dir]
+            - if (aboutPath) excludeDirs.push(aboutPath)
+            - site.pages.each(function (p) {
+            -     if (excludeDirs.some(function(d) { return d && p.path.indexOf(d) === 0; })) return;
+            -     var pClass = is_current(p.path) ? 'active' : null
+            a(href=config.root + p.path, class=pClass)
+                svg(width="16", height="16", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.6")
+                    path(d="M6 2h9l4 4v16H6z")
+                    path(d="M14 2v5h5")
+                span.label-zh= p.title
+                span.count PAGE
+            - });

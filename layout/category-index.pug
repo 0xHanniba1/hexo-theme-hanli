@@ -1,16 +1,19 @@
 extends partial/layout
 
+include mixins
+
 block site_title
     != __("Categories") + " · " + config.title
 
 block description
-    - var desc = __("Categories")+ ' - ' + config.title;
+    - var desc = __("Categories") + ' - ' + config.title
     meta(name="description", content=desc)
 
 block content
-    .autopagerize_page_element: .content
-        .archive.animated.fadeInDown
-            p.post-title
-                != __("Categories")
-            include mixins
-            +categoryList()
+    section.tags-head
+        .archive-title
+            .eyebrow= __('Categories')
+            h1= __('Categories')
+            p 按主题归类的文章集合。
+
+    +categoryList()

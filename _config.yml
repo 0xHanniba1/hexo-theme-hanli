@@ -1,7 +1,7 @@
 # hexo-theme-hanli Configuration
 # Documentation: https://github.com/0xHanniba1/hexo-theme-hanli
 
-# Site Title (displayed in sidebar)
+# Site Title (displayed in sidebar / vertical slogan)
 title_primary: "Your Blog Title"       # the bigger text
 title_secondary: "Your Blog Subtitle"  # the smaller text
 keywords:
@@ -30,7 +30,21 @@ showTags: true
 # Search (requires hexo-generator-searchdb plugin)
 search:
   enable: true
-  placeholder: "Search posts..."
+  placeholder: "搜索文章、标签、页面 · Search everything…"
 
 # Color scheme: light / dark
 themeStyle: light
+
+# Left-rail navigation: links that don't map to Hexo's built-in pages.
+# Leave value blank or comment out to hide the entry.
+nav:
+  weekly_url:                 # e.g. /tags/2026zk/  — "周志" entry points at your weekly-journal tag
+  weekly_tag:                 # e.g. 2026zk         — tag slug used to count posts for the W## badge
+  about_url: /about/          # "关于" entry
+
+# Right-aside "此刻 · Now Playing" widget.
+# Set any field to blank / comment it out to hide the whole block.
+now_playing:
+  title:                      # e.g. 渔舟唱晚
+  artist:                     # e.g. 古琴 · 李祥霆
+  cover:                      # optional image path, e.g. /images/np.jpg

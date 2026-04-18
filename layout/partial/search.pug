@@ -1,19 +1,64 @@
-//- Search modal component
+//- Search command palette — opens via topbar trigger, ⌘K / Ctrl+K / /
 if theme.search && theme.search.enable
-  #search-modal.search-modal
-    .search-modal-overlay
-    .search-modal-content
-      .search-header
-        .search-input-wrapper
-          i.fa.fa-search.search-icon
-          input#search-input.search-input(
-            type="text"
-            placeholder=theme.search.placeholder || "搜索文章..."
-            autocomplete="off"
-          )
-        button.search-close(type="button" aria-label="关闭搜索")
-          i.fa.fa-times
-      #search-results.search-results
-        .search-empty 输入关键词开始搜索
-      .search-footer
-        span.search-tip 按 Enter 选择 · ↑↓ 导航 · Esc 关闭
+    - var handleAccent = (theme.github ? theme.github.toUpperCase() : '')
+    #sp-overlay.sp-overlay(hidden)
+        .sp-modal(role="dialog", aria-label="搜索")
+            .sp-header
+                .sp-input-row
+                    span.sp-ico
+                        svg(viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.75")
+                            circle(cx="11" cy="11" r="7")
+                            path(d="m20 20-3.5-3.5")
+                    input#sp-input.sp-input(
+                        type="text"
+                        placeholder=theme.search.placeholder || "搜索文章、标签、页面 · Search everything…"
+                        autocomplete="off"
+                        spellcheck="false"
+                    )
+                    span.sp-query-meta#sp-count
+                        span.num 0
+                        |  / 0
+                    button.sp-close#sp-close(type="button", aria-label="关闭")
+                        svg(viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="2")
+                            path(d="M6 6l12 12M18 6 6 18")
+                .sp-scope#sp-scope
+                    span.lbl Scope
+                    button.on(type="button", data-scope="all") 全部
+                        span.n 0
+                    button(type="button", data-scope="post") 文章
+                        span.n 0
+                    button(type="button", data-scope="tag") # 标签
+                        span.n 0
+                    button(type="button", data-scope="page") 页面
+                        span.n 0
+                    span.spacer
+                    span.timing
+                        span.dot
+                        | 实时检索 · Live
+            .sp-body
+                #sp-results.sp-results
+                aside#sp-preview.sp-preview
+            .sp-footer
+                span.sp-foot-item
+                    span.sp-kk.arrow ↑
+                    span.sp-kk.arrow ↓
+                    |  导航
+                span.sp-foot-item
+                    span.sp-kk ⏎
+                    |  打开
+                span.sp-foot-item
+                    span.sp-kk Tab
+                    |  切换范围
+                span.sp-foot-item
+                    span.sp-kk Esc
+                    |  关闭
+                span.sp-foot-spacer
+                span.sp-foot-brand
+                    | 慢就是快
+                    span.sep ·
+                    | 自律
+                    span.sep ·
+                    | 坚持
+                    if handleAccent
+                        span.sep ·
+                        span.accent= handleAccent

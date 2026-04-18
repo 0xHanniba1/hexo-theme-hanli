@@ -1,14 +1,25 @@
 extends partial/layout
 
+include mixins
+
 block site_title
     != page.title + " · " + config.title
 
 block description
-    - var desc = page.desc || strip_html(page.content).replace(/^\s*/, '').replace(/\s*$/, '').substring(0, 150);
+    - var desc = page.desc || strip_html(page.content).replace(/^\s*/, '').replace(/\s*$/, '').substring(0, 150)
     meta(name="description", content=desc)
 
 block content
-    .autopagerize_page_element: .content: .post-page
-        include mixins
-        +make_post(page, true)
-        include partial/comments
+    .post-page
+        article.post-hero
+            nav.crumbs
+                a(href=config.root)= __('Home')
+                span.sep /
+                span= page.title
+            h1.post-h1= page.title
+
+        section.article.no-toc
+            div.prose!= page.content
+
+        section.comments-sec
+            include partial/comments

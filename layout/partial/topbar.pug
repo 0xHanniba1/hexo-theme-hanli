@@ -1,27 +1,41 @@
-nav#topbar.topbar
-  .topbar-inner
-    .topbar-left
-      a.topbar-brand(href=config.root)
-        img.topbar-favicon(src="/images/favicon.png" alt="favicon")
-        = ' ' + (config.title_secondary || config.title || 'Blog')
-    .topbar-center
-      if theme.search && theme.search.enable
-        a.topbar-search-trigger.search-trigger(href="javascript:void(0)")
-          i.fa.fa-search
-          span.topbar-search-kbd
-            kbd Ctrl
-            kbd K
-    .topbar-right
-      a#topbar-theme-toggle.topbar-icon(href="javascript:void(0)", aria-label="Toggle theme")
-        svg.theme-icon-sun(xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round")
-          circle(cx="12" cy="12" r="5")
-          line(x1="12" y1="1" x2="12" y2="3")
-          line(x1="12" y1="21" x2="12" y2="23")
-          line(x1="4.22" y1="4.22" x2="5.64" y2="5.64")
-          line(x1="18.36" y1="18.36" x2="19.78" y2="19.78")
-          line(x1="1" y1="12" x2="3" y2="12")
-          line(x1="21" y1="12" x2="23" y2="12")
-          line(x1="4.22" y1="19.78" x2="5.64" y2="18.36")
-          line(x1="18.36" y1="5.64" x2="19.78" y2="4.22")
-        svg.theme-icon-moon(xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none")
-          path(d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z")
+header.topbar
+    a.brand(href=config.root)
+        - var sealChar = (theme.brand_char || (config.title && config.title.charAt(0)) || '韩')
+        .brand-seal= sealChar
+        .brand-text
+            span.zh= config.title || theme.title_secondary || 'Blog'
+            span.en= (theme.brand_en || (theme.github ? theme.github.toUpperCase() + ' · NOTES' : 'NOTES'))
+
+    if theme.search && theme.search.enable
+        button.search-trigger(type="button", aria-label="搜索")
+            svg(width="14", height="14", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.75")
+                circle(cx="11" cy="11" r="7")
+                path(d="m20 20-3.5-3.5")
+            span= theme.search.placeholder || '搜索文章 / Search posts…'
+            span.hint
+                span.kbd ⌘
+                span.kbd K
+    else
+        span
+
+    .top-actions
+        if theme.rss
+            a.icon-btn(href= config.url + "/" + theme.rss, target="_blank", rel="noopener noreferrer", aria-label="RSS")
+                svg(width="15", height="15", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.75")
+                    path(d="M4 11a9 9 0 0 1 9 9")
+                    path(d="M4 4a16 16 0 0 1 16 16")
+                    circle(cx="5" cy="19" r="1.5")
+        if theme.github
+            a.icon-btn(href="https://github.com/" + theme.github, target="_blank", rel="noopener noreferrer", aria-label="GitHub")
+                svg(width="15", height="15", viewBox="0 0 24 24", fill="currentColor")
+                    path(d="M12 2a10 10 0 0 0-3.16 19.49c.5.1.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.52 1.03 1.52 1.03.89 1.52 2.34 1.08 2.9.82.1-.64.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.1.39-2 1.03-2.7-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.58 9.58 0 0 1 5 0c1.9-1.3 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.6 1.03 2.7 0 3.84-2.34 4.68-4.57 4.93.36.3.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z")
+
+        .theme-toggle(role="tablist", aria-label="主题切换")
+            span.slider#themeSlider
+            button.opt#themeInk(type="button", aria-pressed="true", title="夜 · Ink")
+                svg(width="14", height="14", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.75")
+                    path(d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z")
+            button.opt#themePaper(type="button", aria-pressed="false", title="昼 · Paper")
+                svg(width="14", height="14", viewBox="0 0 24 24", fill="none", stroke="currentColor", stroke-width="1.75")
+                    circle(cx="12" cy="12" r="4")
+                    path(d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4")

@@ -1,262 +1,460 @@
 /**
- * Search functionality for hexo-theme-hanli
- * Requires hexo-generator-searchdb plugin
+ * Search command palette — fetches /search.json from hexo-generator-searchdb,
+ * derives tag buckets, wires scope tabs, previews selected row.
  */
-(function() {
+(function () {
   'use strict';
 
-  var searchModal = document.getElementById('search-modal');
-  var searchInput = document.getElementById('search-input');
-  var searchResults = document.getElementById('search-results');
-  var searchData = null;
-  var activeIndex = -1;
+  var overlay  = document.getElementById('sp-overlay');
+  var input    = document.getElementById('sp-input');
+  var resultsEl = document.getElementById('sp-results');
+  var previewEl = document.getElementById('sp-preview');
+  var closeBtn = document.getElementById('sp-close');
+  var countEl  = document.getElementById('sp-count');
+  var scopeEl  = document.getElementById('sp-scope');
 
-  // Exit if search is not enabled
-  if (!searchModal || !searchInput) return;
+  if (!overlay || !input || !resultsEl) return;
 
-  // Load search data
-  function loadSearchData() {
-    if (searchData) return Promise.resolve(searchData);
+  // Static pages, extracted from nav. Hardcoded fallback keeps it working even if nav changes.
+  var PAGES = [
+    { t: '首页',   en: 'Home',       href: '/',           ic: '宅' },
+    { t: '归档',   en: 'Archive',    href: '/archive/',   ic: '檔' },
+    { t: '标签',   en: 'Tags',       href: '/tags/',      ic: '籤' },
+    { t: '分类',   en: 'Categories', href: '/categories/',ic: '類' },
+    { t: '周志',   en: 'Weekly',     href: '/tags/2026zk/', ic: '週' },
+    { t: '关于',   en: 'About',      href: '/about/',     ic: '自' }
+  ];
 
-    var searchPath = window.searchPath || '/search.json';
-    return fetch(searchPath)
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(data) {
-        searchData = data;
-        return data;
-      })
-      .catch(function(err) {
-        console.error('Failed to load search data:', err);
-        return [];
-      });
+  var POSTS = [];
+  var TAGS = [];
+  var dataLoaded = false;
+  var loadingPromise = null;
+
+  var scope = 'all';
+  var rows = [];
+  var sel = 0;
+  var recent = loadRecent();
+
+  function loadRecent() {
+    try {
+      var v = localStorage.getItem('sp_recent');
+      return v ? JSON.parse(v).slice(0, 6) : [];
+    } catch (_) { return []; }
+  }
+  function saveRecent(q) {
+    if (!q) return;
+    recent = [q].concat(recent.filter(function (r) { return r !== q; })).slice(0, 6);
+    try { localStorage.setItem('sp_recent', JSON.stringify(recent)); } catch (_) {}
   }
 
-  // Open search modal
-  function openSearch() {
-    searchModal.classList.add('active');
-    searchInput.focus();
-    document.body.style.overflow = 'hidden';
-    loadSearchData();
-  }
+  function loadData() {
+    if (dataLoaded) return Promise.resolve();
+    if (loadingPromise) return loadingPromise;
 
-  // Close search modal
-  function closeSearch() {
-    searchModal.classList.remove('active');
-    searchInput.value = '';
-    searchResults.innerHTML = '<div class="search-empty">输入关键词开始搜索</div>';
-    activeIndex = -1;
-    document.body.style.overflow = '';
-  }
-
-  // Escape HTML to prevent XSS
-  function escapeHtml(text) {
-    var div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  // Highlight matching text
-  function highlightText(text, keyword) {
-    if (!text || !keyword) return escapeHtml(text || '');
-    var escaped = escapeHtml(text);
-    var regex = new RegExp('(' + keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-    return escaped.replace(regex, '<span class="search-highlight">$1</span>');
-  }
-
-  // Extract content snippet around keyword
-  function getSnippet(content, keyword, length) {
-    length = length || 150;
-    if (!content || !keyword) return content ? content.substring(0, length) : '';
-
-    var lowerContent = content.toLowerCase();
-    var lowerKeyword = keyword.toLowerCase();
-    var index = lowerContent.indexOf(lowerKeyword);
-
-    if (index === -1) {
-      return content.substring(0, length);
-    }
-
-    var start = Math.max(0, index - 30);
-    var end = Math.min(content.length, index + keyword.length + length - 30);
-    var snippet = content.substring(start, end);
-
-    if (start > 0) snippet = '...' + snippet;
-    if (end < content.length) snippet = snippet + '...';
-
-    return snippet;
-  }
-
-  // Perform search
-  function performSearch(keyword) {
-    if (!keyword || keyword.trim().length < 1) {
-      searchResults.innerHTML = '<div class="search-empty">输入关键词开始搜索</div>';
-      activeIndex = -1;
-      return;
-    }
-
-    keyword = keyword.trim().toLowerCase();
-
-    loadSearchData().then(function(data) {
-      var results = [];
-
-      data.forEach(function(item) {
-        var titleMatch = item.title && item.title.toLowerCase().indexOf(keyword) !== -1;
-        var contentMatch = item.content && item.content.toLowerCase().indexOf(keyword) !== -1;
-        var tagMatch = item.tags && item.tags.some(function(tag) {
-          return tag.name && tag.name.toLowerCase().indexOf(keyword) !== -1;
+    var path = window.searchPath || '/search.json';
+    loadingPromise = fetch(path)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        POSTS = (data || []).map(function (p) {
+          var tags = (p.tags || []).map(function (t) {
+            return typeof t === 'string' ? t : (t && t.name) || '';
+          }).filter(Boolean);
+          var date = extractDate(p.url);
+          return {
+            title: p.title || '',
+            url: p.url || '#',
+            content: (p.content || '').replace(/\s+/g, ' ').trim(),
+            tags: tags,
+            date: date,
+            read: readTime(p.content || '')
+          };
         });
-
-        if (titleMatch || contentMatch || tagMatch) {
-          results.push({
-            title: item.title,
-            content: item.content,
-            url: item.url,
-            tags: item.tags || [],
-            titleMatch: titleMatch,
-            contentMatch: contentMatch,
-            tagMatch: tagMatch
-          });
-        }
-      });
-
-      // Sort: title matches first, then content matches
-      results.sort(function(a, b) {
-        if (a.titleMatch && !b.titleMatch) return -1;
-        if (!a.titleMatch && b.titleMatch) return 1;
-        return 0;
-      });
-
-      renderResults(results, keyword);
-    });
+        var counts = {};
+        POSTS.forEach(function (p) {
+          p.tags.forEach(function (t) { counts[t] = (counts[t] || 0) + 1; });
+        });
+        TAGS = Object.keys(counts).map(function (name) {
+          return { name: name, n: counts[name] };
+        }).sort(function (a, b) { return b.n - a.n; });
+        dataLoaded = true;
+      })
+      .catch(function (err) { console.error('Search data failed:', err); });
+    return loadingPromise;
   }
 
-  // Render search results
-  function renderResults(results, keyword) {
-    activeIndex = -1;
+  function extractDate(url) {
+    var m = /\/(\d{4})\/(\d{1,2})\//.exec(url || '');
+    return m ? (m[1] + '-' + ('0' + m[2]).slice(-2)) : '';
+  }
+  function readTime(content) {
+    var n = (content || '').replace(/\s+/g, '').length;
+    return Math.max(1, Math.round(n / 400)) + ' min';
+  }
 
-    if (results.length === 0) {
-      searchResults.innerHTML = '<div class="search-no-result"><i class="fa fa-search"></i>没有找到相关结果</div>';
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function hi(txt, q) {
+    var safe = escapeHtml(txt);
+    if (!q) return safe;
+    var re = new RegExp('(' + q.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + ')', 'ig');
+    return safe.replace(re, '<mark>$1</mark>');
+  }
+  function snippet(content, q, len) {
+    len = len || 140;
+    if (!content) return '';
+    if (!q) return content.slice(0, len);
+    var i = content.toLowerCase().indexOf(q.toLowerCase());
+    if (i < 0) return content.slice(0, len);
+    var start = Math.max(0, i - 40);
+    var end = Math.min(content.length, i + q.length + len - 40);
+    return (start > 0 ? '…' : '') + content.slice(start, end) + (end < content.length ? '…' : '');
+  }
+
+  function open() {
+    overlay.hidden = false;
+    requestAnimationFrame(function () { overlay.classList.add('open'); });
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { input.focus(); }, 80);
+    loadData().then(function () { render(input.value); });
+  }
+  function close() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(function () { overlay.hidden = true; }, 200);
+  }
+
+  document.querySelectorAll('.search-trigger, .search').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.preventDefault(); open(); });
+  });
+  closeBtn && closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+
+  document.addEventListener('keydown', function (e) {
+    var meta = e.metaKey || e.ctrlKey;
+    if (meta && e.key.toLowerCase() === 'k') { e.preventDefault(); overlay.classList.contains('open') ? close() : open(); return; }
+    if (!overlay.classList.contains('open')) {
+      if (e.key === '/' && !isTextInput(e.target)) { e.preventDefault(); open(); }
       return;
     }
-
-    var html = results.slice(0, 20).map(function(item, index) {
-      var snippet = getSnippet(item.content, keyword, 120);
-      var tagsHtml = item.tags.slice(0, 3).map(function(tag) {
-        return '<span class="search-result-tag">' + escapeHtml(tag.name) + '</span>';
-      }).join('');
-
-      return '<a class="search-result-item" href="' + item.url + '" data-index="' + index + '">' +
-        '<div class="search-result-title">' + highlightText(item.title, keyword) + '</div>' +
-        '<div class="search-result-content">' + highlightText(snippet, keyword) + '</div>' +
-        (tagsHtml ? '<div class="search-result-meta">' + tagsHtml + '</div>' : '') +
-      '</a>';
-    }).join('');
-
-    searchResults.innerHTML = html;
-  }
-
-  // Navigate results with keyboard
-  function navigateResults(direction) {
-    var items = searchResults.querySelectorAll('.search-result-item');
-    if (items.length === 0) return;
-
-    if (activeIndex >= 0 && activeIndex < items.length) {
-      items[activeIndex].classList.remove('active');
-    }
-
-    if (direction === 'down') {
-      activeIndex = activeIndex < items.length - 1 ? activeIndex + 1 : 0;
-    } else {
-      activeIndex = activeIndex > 0 ? activeIndex - 1 : items.length - 1;
-    }
-
-    items[activeIndex].classList.add('active');
-    items[activeIndex].scrollIntoView({ block: 'nearest' });
-  }
-
-  // Select current result
-  function selectResult() {
-    var items = searchResults.querySelectorAll('.search-result-item');
-    if (activeIndex >= 0 && activeIndex < items.length) {
-      window.location.href = items[activeIndex].href;
-    }
-  }
-
-  // Event: Click search trigger
-  document.querySelectorAll('.search-trigger').forEach(function(el) {
-    el.addEventListener('click', function(e) {
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+    else if (e.key === 'ArrowUp')   { e.preventDefault(); move(-1); }
+    else if (e.key === 'Enter') {
       e.preventDefault();
-      openSearch();
+      var r = rows[sel];
+      if (r && r.dataset.href && r.dataset.href !== '#') {
+        saveRecent(input.value.trim());
+        location.href = r.dataset.href;
+      }
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      cycleScope(e.shiftKey ? -1 : 1);
+    }
+  });
+
+  function isTextInput(t) {
+    return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+  }
+
+  // Scope tabs
+  if (scopeEl) {
+    scopeEl.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-scope]');
+      if (!b) return;
+      setScope(b.dataset.scope);
     });
-  });
-
-  // Event: Close button
-  var closeBtn = searchModal.querySelector('.search-close');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeSearch);
   }
-
-  // Event: Click overlay to close
-  var overlay = searchModal.querySelector('.search-modal-overlay');
-  if (overlay) {
-    overlay.addEventListener('click', closeSearch);
+  function cycleScope(delta) {
+    var order = ['all', 'post', 'tag', 'page'];
+    var i = order.indexOf(scope);
+    setScope(order[(i + delta + order.length) % order.length]);
   }
-
-  // Event: Input search
-  var searchTimeout;
-  searchInput.addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(function() {
-      performSearch(searchInput.value);
-    }, 200);
-  });
-
-  // Event: Keyboard navigation
-  searchInput.addEventListener('keydown', function(e) {
-    switch(e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        navigateResults('down');
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        navigateResults('up');
-        break;
-      case 'Enter':
-        e.preventDefault();
-        selectResult();
-        break;
-      case 'Escape':
-        closeSearch();
-        break;
+  function setScope(s) {
+    scope = s;
+    if (scopeEl) {
+      scopeEl.querySelectorAll('button[data-scope]').forEach(function (b) {
+        b.classList.toggle('on', b.dataset.scope === s);
+      });
     }
+    sel = 0;
+    render(input.value);
+  }
+
+  var searchTimeout;
+  input.addEventListener('input', function () {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function () {
+      sel = 0;
+      render(input.value);
+    }, 120);
   });
 
-  // Event: Global keyboard shortcut (Ctrl+K or Cmd+K)
-  document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-      e.preventDefault();
-      if (searchModal.classList.contains('active')) {
-        closeSearch();
-      } else {
-        openSearch();
+  function match(s, Q) {
+    return !Q || String(s || '').toLowerCase().indexOf(Q) !== -1;
+  }
+
+  function render(q) {
+    q = (q || '').trim();
+    var Q = q.toLowerCase();
+
+    var postMatches = POSTS.filter(function (p) {
+      return match(p.title, Q) || match(p.content, Q) || p.tags.some(function (t) { return match(t, Q); });
+    });
+    var tagMatches = TAGS.filter(function (t) { return match(t.name, Q); });
+    var pageMatches = PAGES.filter(function (p) { return match(p.t, Q) || match(p.en, Q); });
+
+    // Rank: title hits first
+    postMatches.sort(function (a, b) {
+      var at = match(a.title, Q) ? 0 : 1;
+      var bt = match(b.title, Q) ? 0 : 1;
+      return at - bt;
+    });
+
+    // Update scope counts
+    if (scopeEl) {
+      var counts = {
+        all:  postMatches.length + tagMatches.length + pageMatches.length,
+        post: postMatches.length,
+        tag:  tagMatches.length,
+        page: pageMatches.length
+      };
+      scopeEl.querySelectorAll('button[data-scope]').forEach(function (b) {
+        var n = b.querySelector('.n');
+        if (n) n.textContent = counts[b.dataset.scope] || 0;
+      });
+    }
+
+    // Apply scope
+    if (scope === 'post') { tagMatches = []; pageMatches = []; }
+    else if (scope === 'tag')  { postMatches = []; pageMatches = []; }
+    else if (scope === 'page') { postMatches = []; tagMatches = []; }
+
+    var total = postMatches.length + tagMatches.length + pageMatches.length;
+    if (countEl) {
+      countEl.innerHTML = '<span class="num">' + total + '</span> / ' + POSTS.length;
+    }
+
+    var out = '';
+    if (!q) {
+      // Empty state: recent + quick jump + hot tags + suggested posts
+      if (recent.length) {
+        out += group('最近搜索', 'Recent', recent.length,
+          recent.map(function (rq, i) {
+            return rowRecent(rq);
+          }).join('')
+        );
+      }
+      if (tagMatches.length) {
+        out += group('热门标签', 'Hot tags', Math.min(tagMatches.length, 4),
+          tagMatches.slice(0, 4).map(function (t) { return rowTag(t, ''); }).join(''));
+      }
+      if (postMatches.length) {
+        out += group('最近文章', 'Recent posts', Math.min(postMatches.length, 4),
+          postMatches.slice(0, 4).map(function (p) { return rowPost(p, ''); }).join(''));
+      }
+    } else if (total === 0) {
+      out = '<div class="sp-empty">' +
+        '<div class="glyph">無</div>' +
+        '<div class="ti">没找到与「' + escapeHtml(q) + '」相关的内容</div>' +
+        '<div class="sb">换个关键词试试，或者：</div>' +
+        '<div class="suggest">' +
+          TAGS.slice(0, 4).map(function (t) {
+            return '<a href="#" data-fill="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + '</a>';
+          }).join('') +
+        '</div></div>';
+    } else {
+      if (postMatches.length) {
+        out += group('文章', 'Posts', postMatches.length,
+          postMatches.slice(0, 12).map(function (p) { return rowPost(p, q); }).join(''));
+      }
+      if (tagMatches.length) {
+        out += group('标签', 'Tags', tagMatches.length,
+          tagMatches.slice(0, 6).map(function (t) { return rowTag(t, q); }).join(''));
+      }
+      if (pageMatches.length) {
+        out += group('页面', 'Pages', pageMatches.length,
+          pageMatches.map(rowPage).join(''));
       }
     }
 
-    // ESC to close
-    if (e.key === 'Escape' && searchModal.classList.contains('active')) {
-      closeSearch();
-    }
-  });
+    resultsEl.innerHTML = out;
 
-  // Event: Click result item
-  searchResults.addEventListener('click', function(e) {
-    var item = e.target.closest('.search-result-item');
-    if (item) {
-      // Let the natural link behavior work
-    }
-  });
+    resultsEl.querySelectorAll('[data-fill]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        input.value = a.dataset.fill;
+        input.dispatchEvent(new Event('input'));
+      });
+    });
 
+    rows = Array.prototype.slice.call(resultsEl.querySelectorAll('.sp-row'));
+    rows.forEach(function (r, i) {
+      r.addEventListener('mouseenter', function () { sel = i; updateSelection(); });
+      r.addEventListener('click', function (e) {
+        if (r.dataset.href && r.dataset.href !== '#') {
+          saveRecent(q);
+        } else {
+          // recent-search row: refill query
+          e.preventDefault();
+          input.value = decodeURIComponent(r.dataset.q || '');
+          input.dispatchEvent(new Event('input'));
+        }
+      });
+    });
+    updateSelection();
+  }
+
+  function group(han, en, n, innerHTML) {
+    if (!innerHTML) return '';
+    return '<div class="sp-group"><div class="sp-group-head">' +
+      '<span class="han">' + han + '</span>' +
+      '<span>' + en + '</span>' +
+      '<span class="num">' + n + '</span>' +
+      '<span class="rule"></span>' +
+      '</div>' + innerHTML + '</div>';
+  }
+
+  function rowPost(p, q) {
+    var titleHtml = hi(p.title, q);
+    var ex = snippet(p.content, q, 140);
+    return '<a class="sp-row" data-kind="post"' +
+      ' data-href="' + escapeHtml(p.url) + '"' +
+      ' data-t="' + encodeURIComponent(p.title) + '"' +
+      ' data-ex="' + encodeURIComponent(ex) + '"' +
+      ' data-q="' + encodeURIComponent(q || '') + '"' +
+      ' data-date="' + escapeHtml(p.date) + '"' +
+      ' data-read="' + escapeHtml(p.read) + '"' +
+      ' data-tags="' + escapeHtml(p.tags.join(',')) + '">' +
+      '<span class="sp-row-ic">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4h10l4 4v12H6z"/><path d="M14 4v4h4"/><path d="M9 13h8M9 17h6"/></svg>' +
+      '</span>' +
+      '<div class="sp-row-main">' +
+        '<div class="sp-row-title">' + titleHtml + '</div>' +
+        '<div class="sp-row-sub">' +
+          (p.date ? '<span>' + escapeHtml(p.date) + '</span><span class="dot"></span>' : '') +
+          '<span>' + escapeHtml(p.read) + '</span>' +
+          (p.tags.length ? '<span class="dot"></span>' + p.tags.slice(0, 2).map(function (tg) { return '<span class="tg">' + escapeHtml(tg) + '</span>'; }).join('') : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="sp-row-meta"></div>' +
+      '<div class="sp-row-kbd"><span class="kk">⏎</span></div>' +
+      '</a>';
+  }
+
+  function rowTag(t, q) {
+    var href = '/tags/' + encodeURIComponent(t.name) + '/';
+    return '<a class="sp-row tag" data-kind="tag"' +
+      ' data-href="' + href + '"' +
+      ' data-t="' + encodeURIComponent(t.name) + '"' +
+      ' data-n="' + t.n + '">' +
+      '<span class="sp-row-ic">#</span>' +
+      '<div class="sp-row-main">' +
+        '<div class="sp-row-title">' + hi(t.name, q) + '</div>' +
+        '<div class="sp-row-sub"><span class="cat">TAG</span><span class="dot"></span><span>' + t.n + ' 篇</span></div>' +
+      '</div>' +
+      '<div class="sp-row-meta"><span class="count">' + t.n + '</span><span>篇</span></div>' +
+      '<div class="sp-row-kbd"><span class="kk">⏎</span></div>' +
+      '</a>';
+  }
+
+  function rowPage(p) {
+    return '<a class="sp-row page" data-kind="page"' +
+      ' data-href="' + escapeHtml(p.href) + '"' +
+      ' data-t="' + encodeURIComponent(p.t) + '"' +
+      ' data-en="' + escapeHtml(p.en) + '">' +
+      '<span class="sp-row-ic">' + escapeHtml(p.ic) + '</span>' +
+      '<div class="sp-row-main">' +
+        '<div class="sp-row-title">' + escapeHtml(p.t) + ' <span class="en">' + escapeHtml(p.en) + '</span></div>' +
+        '<div class="sp-row-sub"><span class="cat">NAV</span><span class="dot"></span><span>' + escapeHtml(p.href) + '</span></div>' +
+      '</div>' +
+      '<div class="sp-row-meta"></div>' +
+      '<div class="sp-row-kbd"><span class="kk">⏎</span></div>' +
+      '</a>';
+  }
+
+  function rowRecent(rq) {
+    return '<a class="sp-row" data-kind="recent"' +
+      ' data-href="#"' +
+      ' data-q="' + encodeURIComponent(rq) + '"' +
+      ' data-t="' + encodeURIComponent(rq) + '">' +
+      '<span class="sp-row-ic">史</span>' +
+      '<div class="sp-row-main">' +
+        '<div class="sp-row-title">' + escapeHtml(rq) + '</div>' +
+        '<div class="sp-row-sub"><span class="cat">QUERY</span><span class="dot"></span><span>最近搜索</span></div>' +
+      '</div>' +
+      '<div class="sp-row-meta"></div>' +
+      '<div class="sp-row-kbd"><span class="kk">⏎</span></div>' +
+      '</a>';
+  }
+
+  function move(delta) {
+    if (!rows.length) return;
+    sel = (sel + delta + rows.length) % rows.length;
+    updateSelection();
+  }
+  function updateSelection() {
+    rows.forEach(function (r, i) { r.classList.toggle('on', i === sel); });
+    var r = rows[sel];
+    if (!r) { previewEl && (previewEl.innerHTML = ''); return; }
+    var rt = r.offsetTop, rb = rt + r.offsetHeight;
+    var pt = resultsEl.scrollTop, pb = pt + resultsEl.clientHeight;
+    if (rt < pt) resultsEl.scrollTop = rt - 8;
+    else if (rb > pb) resultsEl.scrollTop = rb - resultsEl.clientHeight + 8;
+    renderPreview(r);
+  }
+
+  function renderPreview(r) {
+    if (!previewEl) return;
+    var kind = r.dataset.kind;
+    var t = decodeURIComponent(r.dataset.t || '');
+    var ex = decodeURIComponent(r.dataset.ex || '');
+    var html = '';
+    if (kind === 'post') {
+      var tags = (r.dataset.tags || '').split(',').filter(Boolean);
+      var q = decodeURIComponent(r.dataset.q || '');
+      html =
+        '<div class="sp-preview-lbl">预览 · Preview</div>' +
+        '<div class="sp-prev-card">' +
+          '<div class="sp-prev-kicker">' + escapeHtml(r.dataset.date || '') + ' · ' + escapeHtml(r.dataset.read || '') + '</div>' +
+          '<div class="sp-prev-title">' + hi(t, q) + '</div>' +
+          (ex ? '<div class="sp-prev-excerpt">' + hi(ex, q) + '</div>' : '') +
+          (tags.length ? '<div class="sp-prev-meta">' +
+            tags.map(function (tg) { return '<span class="mtag">#' + escapeHtml(tg) + '</span>'; }).join('') +
+          '</div>' : '') +
+        '</div>';
+    } else if (kind === 'tag') {
+      html =
+        '<div class="sp-preview-lbl">标签 · Tag</div>' +
+        '<div class="sp-prev-card">' +
+          '<div class="sp-prev-kicker">TAG · ' + (r.dataset.n || 0) + ' 篇</div>' +
+          '<div class="sp-prev-title">#' + escapeHtml(t) + '</div>' +
+          '<div class="sp-prev-excerpt">查看所有带有 <mark>' + escapeHtml(t) + '</mark> 标签的文章。</div>' +
+          '<div class="sp-prev-meta">' +
+            '<span class="mtag">⏎ 打开</span>' +
+            '<span class="mtag">' + escapeHtml(r.dataset.href || '') + '</span>' +
+          '</div>' +
+        '</div>';
+    } else if (kind === 'page') {
+      html =
+        '<div class="sp-preview-lbl">导航 · Navigate</div>' +
+        '<div class="sp-prev-card">' +
+          '<div class="sp-prev-kicker">NAV · 内链</div>' +
+          '<div class="sp-prev-title">' + escapeHtml(t) + ' <span class="en">' + escapeHtml(r.dataset.en || '') + '</span></div>' +
+          '<div class="sp-prev-excerpt">前往 ' + escapeHtml(r.dataset.href || '') + '</div>' +
+          '<div class="sp-prev-meta"><span class="mtag">⏎ 跳转</span></div>' +
+        '</div>';
+    } else {
+      html =
+        '<div class="sp-preview-lbl">最近搜索</div>' +
+        '<div class="sp-prev-card">' +
+          '<div class="sp-prev-kicker">QUERY HISTORY</div>' +
+          '<div class="sp-prev-title">' + escapeHtml(t) + '</div>' +
+          '<div class="sp-prev-excerpt">点击或按 ⏎ 重新检索。</div>' +
+        '</div>';
+    }
+    previewEl.innerHTML = html;
+  }
 })();

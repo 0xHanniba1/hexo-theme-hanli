@@ -1,6 +1,6 @@
 meta(charset="utf-8")
 meta(name="X-UA-Compatible", content="IE=edge")
-meta(name="author", content= theme.author || config.author || '')
+meta(name="author", content= theme.author)
 title
     block site_title
         = config.title
@@ -19,15 +19,21 @@ meta(content="telephone=no",name="format-detection")
 
 meta(name="renderer",content="webkit")
 link(rel="short icon", href="/images/favicon.png",type="image/x-icon")
-- var cssVersion = '20260131-1'
-link(rel="stylesheet", href= url_for('css/bootstrap.min.css'))
-link(rel="stylesheet", href= url_for('css/font-awesome.min.css'))
-//- link(rel="stylesheet", href= url_for('css/typography-custom-font.css'))
-link#theme-light(rel="stylesheet", href= url_for('css/style.css') + '?v=' + cssVersion)
-link#theme-dark(rel="stylesheet", href= url_for('css/style-dark.css') + '?v=' + cssVersion, disabled)
-link(rel="stylesheet", href= url_for('css/custom.css') + '?v=' + cssVersion)
+
+//- Restore theme before first paint to avoid FOUC
 script.
-    (function(){var t=localStorage.getItem('theme');if(t==='dark'){document.getElementById('theme-light').disabled=true;document.getElementById('theme-dark').disabled=false;}})();
+    (function(){try{var t=localStorage.getItem('theme');if(t==='paper'||t==='ink'){document.documentElement.setAttribute('data-theme',t);}else{document.documentElement.setAttribute('data-theme','ink');}}catch(e){}})();
+
+- var cssVersion = '20260418-12'
+link(rel="preconnect", href="https://fonts.googleapis.com")
+link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin)
+link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap")
+
+//- Keep font-awesome for nav icons & share buttons that use .fa-*
+link(rel="stylesheet", href= url_for('css/font-awesome.min.css'))
+link(rel="stylesheet", href= url_for('css/typo.css') + '?v=' + cssVersion)
+link(rel="stylesheet", href= url_for('css/custom.css') + '?v=' + cssVersion)
+
 if theme.search && theme.search.enable
     link(rel="stylesheet", href= url_for('css/search.css') + '?v=' + cssVersion)
 link(rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml")

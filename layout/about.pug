@@ -1,0 +1,50 @@
+extends partial/layout
+
+include mixins
+
+block site_title
+    != (page.title || '关于') + " · " + config.title
+
+block description
+    - var desc = page.desc || page.tagline || ('关于 ' + config.title)
+    meta(name="description", content=desc)
+
+block content
+    .post-page
+        article.post-hero.about-hero
+            .about-hero-inner
+                - var sealChar = page.brand_char || theme.brand_char || (config.title && config.title.charAt(0)) || '韩'
+                .about-hero-seal= sealChar
+                .about-hero-text
+                    - var handle = page.handle || (theme.github ? '@' + theme.github : '')
+                    if handle
+                        .about-hero-handle= handle
+                    //- SEO/a11y only — an <h1> is kept for semantics but hidden visually.
+                    h1.sr-only= page.title || '关于'
+                    if page.tagline
+                        p.about-hero-slogan
+                            +beautifyTitle(page.tagline)
+                    if page.contact && page.contact.length > 0
+                        .about-hero-contacts
+                            each c in page.contact
+                                //- Absolute http(s)/mailto/tel → keep as-is.
+                                //- Site-relative (/foo) → prefix config.url so feeds/etc. resolve
+                                //- against the published host (avoids localhost mis-encoding).
+                                - var rawUrl = c.url || ''
+                                - var isAbs = /^(https?:\/\/|mailto:|tel:)/.test(rawUrl)
+                                - var base = (config.url || '').replace(/\/$/, '')
+                                - var href = isAbs ? rawUrl : (base + (rawUrl.charAt(0) === '/' ? rawUrl : '/' + rawUrl))
+                                - var openNew = /^https?:\/\//.test(href)
+                                a.tag-chip(href=href, target=(openNew ? '_blank' : null), rel=(openNew ? 'noopener noreferrer' : null))
+                                    if c.icon
+                                        i(class='fa fa-' + c.icon)
+                                        | &nbsp;
+                                    = c.label
+
+        if page.content && page.content.trim().length > 0
+            section.article.no-toc
+                .prose!= page.content
+
+        if theme.livere || theme.disqus
+            section.comments-sec
+                include partial/comments

@@ -1,16 +1,19 @@
 extends partial/layout
 
+include mixins
+
 block site_title
     != __("Tags") + " · " + config.title
 
 block description
-    - var desc = __("Tags")+ ' - ' + config.title;
+    - var desc = __("Tags") + ' - ' + config.title
     meta(name="description", content=desc)
 
 block content
-    .autopagerize_page_element: .content
-        .archive.animated.fadeInDown
-            p.post-title
-                != __("Tags")
-            include mixins
-            +tagList()
+    section.tags-head
+        .archive-title
+            .eyebrow= __('Tags')
+            h1= __('Tags')
+            p 以标签回看这些年记录过的念头与片段。
+
+    +tagList()

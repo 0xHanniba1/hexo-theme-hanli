@@ -1,0 +1,71 @@
+aside.aside
+    //- Vertical slogan from theme.title_primary, split on Chinese pipe "｜" or ascii "|"
+    - var slogan = theme.title_primary || config.title || ''
+    - var subLine = theme.title_secondary || ''
+    - var parts = slogan.split(/[｜|]/).map(function(s){return s.trim();}).filter(Boolean)
+    .verticals
+        if subLine
+            .v-line.v-sub= subLine
+        .v-line.v-slogan
+            - parts.forEach(function(p, i) {
+            = p
+            if i < parts.length - 1
+                span.sep ／
+            - });
+        .v-brush
+
+    .aside-info
+        if theme.now_playing && theme.now_playing.title
+            .label 此刻 · Now Playing
+            .now-playing
+                if theme.now_playing.cover
+                    .np-cover
+                        img(src=theme.now_playing.cover, alt=theme.now_playing.title, loading="lazy")
+                else
+                    .np-cover
+                .np-text
+                    .t= theme.now_playing.title
+                    if theme.now_playing.artist
+                        .a= theme.now_playing.artist
+                .np-bars
+                    i
+                    i
+                    i
+                    i
+            .divider
+        .label 数据 · Stats
+        .stat-grid
+            .stat
+                .n= site.posts.length
+                .l 文章
+            .stat
+                .n= site.tags.length
+                .l 标签
+            .stat
+                .n= site.categories.length
+                .l 分类
+            - var pageCount = 0
+            - if (site.pages) { site.pages.each(function(pp){ if(![config.tag_dir, config.category_dir, config.archive_dir].some(function(d){return pp.path.indexOf(d)===0;})) pageCount++; }); }
+            .stat
+                .n= pageCount
+                .l 页面
+
+        if theme.github || theme.twitter || theme.weibo || theme.instagram || theme.rss
+            .divider
+            .label 连接 · Links
+            .aside-socials
+                if theme.github
+                    a(href="https://github.com/" + theme.github, target="_blank", rel="noopener noreferrer", aria-label="GitHub")
+                        i.fa.fa-github
+                if theme.twitter
+                    a(href="https://twitter.com/" + theme.twitter, target="_blank", rel="noopener noreferrer", aria-label="Twitter")
+                        i.fa.fa-twitter
+                if theme.instagram
+                    a(href="https://www.instagram.com/" + theme.instagram, target="_blank", rel="noopener noreferrer", aria-label="Instagram")
+                        i.fa.fa-instagram
+                if theme.weibo
+                    a(href="http://weibo.com/u/" + theme.weibo, target="_blank", rel="noopener noreferrer", aria-label="Weibo")
+                        i.fa.fa-weibo
+                if theme.rss
+                    a(href=config.url + "/" + theme.rss, target="_blank", rel="noopener noreferrer", aria-label="RSS")
+                        i.fa.fa-rss

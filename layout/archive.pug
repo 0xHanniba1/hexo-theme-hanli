@@ -1,20 +1,43 @@
 extends partial/layout
 
+include mixins
+
 block site_title
     !=  __("Archive") + " · " + config.title
 
 block description
-    - var desc = __("Archive") +' - ' + config.title;
+    - var desc = __("Archive") + ' - ' + config.title
     meta(name="description", content=desc)
 
 block content
-    .autopagerize_page_element: .content
-        p.post-title
-            != __("Archive") + ' ' + __('ArchiveCount', site.posts.length)
-        .archive.animated.fadeInDown
-            ul.list-with-title
-                include mixins
-                +postList()
-        if config.archive_generator.per_page
-            include mixins
-            +make_pager(__('prev'), __('next'))
+    //- Heatmap data for archive head (last 104 weeks)
+    - var bucketMs = 1000 * 60 * 60 * 24 * 7
+    - var nowMs = Date.now()
+    - var arcBuckets = []
+    - for (var i = 0; i < 104; i++) arcBuckets.push(0);
+    - site.posts.each(function(p) {
+    -     var diff = Math.floor((nowMs - new Date(p.date).getTime()) / bucketMs)
+    -     if (diff >= 0 && diff < 104) arcBuckets[103 - diff] += 1
+    - });
+    - var arcMax = 1
+    - for (var i = 0; i < arcBuckets.length; i++) if (arcBuckets[i] > arcMax) arcMax = arcBuckets[i];
+
+    section.archive-head
+        .archive-title
+            .eyebrow 归档 · Archive
+            h1= __("Archive")
+            p= __('ArchiveCount', site.posts.length) + ' · 按时间线回望走过的路。'
+        .big-heatmap
+            - arcBuckets.forEach(function(c) {
+            -   var l = 0
+            -   if (c > 0) {
+            -     var r = c / arcMax
+            -     l = r > 0.75 ? 4 : r > 0.5 ? 3 : r > 0.25 ? 2 : 1
+            -   }
+            i(data-l=l)
+            - });
+
+    +postList()
+
+    if config.archive_generator && config.archive_generator.per_page
+        +make_pager()

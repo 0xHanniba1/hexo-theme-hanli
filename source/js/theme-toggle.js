@@ -1,37 +1,24 @@
 (function () {
-  var lightSheet = document.getElementById('theme-light');
-  var darkSheet = document.getElementById('theme-dark');
-  var toggleBtn = document.getElementById('topbar-theme-toggle');
-  if (!toggleBtn) return;
+  var root = document.documentElement;
+  var inkBtn = document.getElementById('themeInk');
+  var paperBtn = document.getElementById('themePaper');
+  if (!inkBtn || !paperBtn) return;
 
-  var sunIcon = toggleBtn.querySelector('.theme-icon-sun');
-  var moonIcon = toggleBtn.querySelector('.theme-icon-moon');
-  var saved = localStorage.getItem('theme') || 'light';
-
-  function applyTheme(theme) {
-    if (theme === 'dark') {
-      lightSheet.disabled = true;
-      darkSheet.disabled = false;
-      if (sunIcon) sunIcon.style.display = 'none';
-      if (moonIcon) moonIcon.style.display = 'block';
-    } else {
-      lightSheet.disabled = false;
-      darkSheet.disabled = true;
-      if (sunIcon) sunIcon.style.display = 'block';
-      if (moonIcon) moonIcon.style.display = 'none';
-    }
-    localStorage.setItem('theme', theme);
-    if (theme === 'dark') {
-      document.body.classList.add('theme-dark');
-    } else {
-      document.body.classList.remove('theme-dark');
-    }
+  function current() {
+    var t = localStorage.getItem('theme');
+    return t === 'paper' ? 'paper' : 'ink';
   }
 
-  applyTheme(saved);
+  function apply(theme) {
+    theme = theme === 'paper' ? 'paper' : 'ink';
+    root.setAttribute('data-theme', theme);
+    try { localStorage.setItem('theme', theme); } catch (e) {}
+    inkBtn.setAttribute('aria-pressed', theme === 'ink' ? 'true' : 'false');
+    paperBtn.setAttribute('aria-pressed', theme === 'paper' ? 'true' : 'false');
+  }
 
-  toggleBtn.addEventListener('click', function () {
-    var current = localStorage.getItem('theme') || 'light';
-    applyTheme(current === 'light' ? 'dark' : 'light');
-  });
+  apply(current());
+
+  inkBtn.addEventListener('click', function () { apply('ink'); });
+  paperBtn.addEventListener('click', function () { apply('paper'); });
 })();

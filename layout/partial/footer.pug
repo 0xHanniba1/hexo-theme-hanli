@@ -1,12 +1,12 @@
-footer
-    - var currYear = new Date().getYear() + 1900;
-    p &copy;&nbsp;
-        !=currYear
-        | &nbsp;
-        a(target="_blank", href=config.url,  rel="noopener noreferrer")!=theme.author ? theme.author : config.author ? config.author : config.title
-    p Theme&nbsp;
-        a(target="_blank", href="https://github.com/SumiMakito/hexo-theme-typography", rel="noopener noreferrer") Typography
-        | &nbsp;by&nbsp;
-        a(target="_blank", href="https://www.keep.moe", rel="noopener noreferrer") Makito
-    p Proudly published with&nbsp;
-        a(target="_blank", href="https://hexo.io", rel="noopener noreferrer") Hexo
+- var currYear = new Date().getFullYear()
+- var authorName = theme.author || config.author || config.title
+p
+    | © #{currYear}&nbsp;
+    a(target="_blank", href=config.url, rel="noopener noreferrer")= authorName
+    | &nbsp;·&nbsp;
+    span.han= theme.footer_motto || '以心写心，以慢磨快'
+.foot-right
+    a(href=config.root) Theme: 墨 / Ink
+    a(target="_blank", href="https://hexo.io", rel="noopener noreferrer") Powered by Hexo
+    if theme.rss
+        a(href=config.url + "/" + theme.rss, target="_blank", rel="noopener noreferrer") RSS
