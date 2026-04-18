@@ -112,7 +112,8 @@ rss: atom.xml
 # Command-palette search (⌘K / Ctrl+K / /)
 search:
   enable: true
-  placeholder: "搜索文章、标签、页面 · Search everything…"
+  placeholder: "搜索文章、标签、页面 · Search everything…"  # inside the modal input
+  trigger_hint: "搜索 · Search"                              # shown in the topbar pill (keep short)
 
 # Default theme on first visit: light (paper) / dark (ink)
 themeStyle: light

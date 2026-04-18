@@ -112,7 +112,8 @@ rss: atom.xml
 # 命令面板搜索（⌘K / Ctrl+K / /）
 search:
   enable: true
-  placeholder: "搜索文章、标签、页面 · Search everything…"
+  placeholder: "搜索文章、标签、页面 · Search everything…"  # 模态框输入框里的文案
+  trigger_hint: "搜索 · Search"                              # 顶栏 pill 里的文案（记得短一点）
 
 # 默认主题：light（宣纸）/ dark（墨色）
 themeStyle: light

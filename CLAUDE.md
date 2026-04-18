@@ -65,7 +65,8 @@ Everything user-facing lives in **theme `_config.yml`**. Do not hardcode values 
 | `github` | GH icon in topbar hidden; search-footer brand shows `0XHANNIBA1` fallback (in demo) | string |
 | `rss` | RSS icon hidden | path relative to site root, e.g. `atom.xml` |
 | `search.enable` | Entire search modal + topbar pill hidden | boolean |
-| `search.placeholder` | Default placeholder used | string |
+| `search.placeholder` | Default placeholder used | string (shown inside the modal input) |
+| `search.trigger_hint` | Defaults to `搜索 · Search` | string (shown in the topbar pill; keep it short) |
 | `themeStyle` | `light` (paper) is default | `light` \| `dark` |
 | `nav.weekly_url` | "周志 / W##" entry in left rail hidden | path like `/tags/2026zk/` |
 | `nav.weekly_tag` | W## badge won't update | tag slug (must match a tag actually used) |
