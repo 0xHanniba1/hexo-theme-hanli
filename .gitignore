@@ -8,3 +8,9 @@ _example/public/
 _example/db.json
 _example/node_modules/
 _example/.deploy*/
+
+# User-created theme symlinks inside _example (see README "Example project").
+# Must be created locally — absolute paths break for others, and get picked up
+# by a parent Hexo site's theme scanner, overriding the real theme.
+_example/themes/hanli/*
+!_example/themes/hanli/.gitkeep

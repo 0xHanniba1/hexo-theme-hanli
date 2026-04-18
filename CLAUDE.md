@@ -170,7 +170,7 @@ Write into `source/css/custom.css`. It's loaded **after** `typo.css` — no `!im
 - **`typo.css` is the single source of truth for layout / design tokens.** Don't inline styles in Pug except for FOUC prevention.
 - **Nav labels are intentionally hardcoded Chinese.** Do not replace with `__('...')` i18n calls without also fleshing out the `languages/` YAML files.
 - **`.search-trigger` is the topbar button; `#sp-overlay` is the modal.** `search.js` binds to both names — keep the class on the trigger.
-- **`_example/` uses symlinks** (`../../layout` etc.). Don't `cp` files into `_example/themes/hanli/` or they'll go out of sync.
+- **`_example/themes/hanli/` symlinks are user-created, NEVER committed.** They must resolve to relative paths (`../../layout`, etc.) that the user creates after cloning. If someone commits absolute symlinks, a parent Hexo site's theme-scanner will follow them, pull in stale templates, and silently override the real theme — hard to diagnose. `.gitignore` excludes `_example/themes/hanli/*` except `.gitkeep` — keep it that way.
 - **Personal blog content must never land in this repo.** Only `_example/source/_posts/hello-world.md` and `theme-features.md` ship as demo posts.
 
 ## Test commands
